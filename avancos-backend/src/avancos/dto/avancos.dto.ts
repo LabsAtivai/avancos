@@ -18,6 +18,8 @@ export class CreateAvancoDto {
   @IsOptional() @IsString() importadoDe?: string;
   @IsOptional() @IsString() dataFollowup?: string | null;
   @IsOptional() @IsString() tratativa?: string | null;
+  @IsOptional() @IsString() followupsJson?: string | null;
+  @IsOptional() @IsString() detalhamento?: string | null;
 }
 
 // ─── UpdateAvancoDto ──────────────────────────────────────────────────────────
@@ -37,6 +39,8 @@ export class UpdateAvancoDto {
   @IsOptional() @IsString() porte?: string;
   @IsOptional() @IsString() dataFollowup?: string | null;
   @IsOptional() @IsString() tratativa?: string | null;
+  @IsOptional() @IsString() followupsJson?: string | null;
+  @IsOptional() @IsString() detalhamento?: string | null;
 }
 
 // ─── FilterAvancoDto ──────────────────────────────────────────────────────────

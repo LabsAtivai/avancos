@@ -5,6 +5,11 @@ import {
 
 export type TipoAvanco = 'Interessado' | 'Apresentação' | 'Encaminhamento' | 'Nutrição';
 
+export interface FollowupEntry {
+  data: string;       // ISO date
+  obs: string;
+}
+
 @Entity('avancos')
 @Index(['cliente', 'dataAvanco'])
 export class Avanco {
@@ -58,6 +63,14 @@ export class Avanco {
 
   @Column({ type: 'text', nullable: true })
   tratativa: string | null;
+
+  // Histórico de follow-ups em JSON: [{data, obs}, ...]
+  @Column({ name: 'followups_json', type: 'text', nullable: true })
+  followupsJson: string | null;
+
+  // Detalhamento / status final do lead
+  @Column({ length: 100, nullable: true })
+  detalhamento: string | null;
 
   @CreateDateColumn({ name: 'criado_em' })
   criadoEm: Date;

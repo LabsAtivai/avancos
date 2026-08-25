@@ -94,8 +94,12 @@ export class ImportController {
         { valor: 'dataAvanco',  label: 'Data do avanço' },
         { valor: 'responsavel', label: 'Responsável' },
         { valor: 'observacao',  label: 'Observação' },
-        { valor: 'porte',       label: 'Porte / Tamanho' },
-        { valor: 'ignorar',     label: '— Ignorar coluna —' },
+        { valor: 'porte',        label: 'Porte / Tamanho' },
+        { valor: 'dataFollowup', label: 'Data Follow-up' },
+        { valor: 'tratativa',    label: 'Tratativa / Anotação' },
+        { valor: 'detalhamento', label: 'Detalhamento' },
+        { valor: 'followupsJson',label: 'Histórico FUPs (JSON)' },
+        { valor: 'ignorar',      label: '— Ignorar coluna —' },
       ],
     };
   }

@@ -22,6 +22,8 @@ export const CAMPOS_BANCO = [
   'porte',
   'dataFollowup',
   'tratativa',
+  'detalhamento',
+  'followupsJson',
   'ignorar',
 ] as const;
 
@@ -104,6 +106,16 @@ const AUTO_MAP: Record<string, CampoBanco> = {
   porte: 'porte',
   ano: 'ignorar',
   'tamanho da empresa': 'porte',
+
+  // colunas do CSV Pedro SDR
+  nomelead: 'nomeLead',
+  importadode: 'ignorar',
+  obs: 'observacao',
+  status: 'tipo',
+  detalhamento: 'detalhamento',
+  followupsjson: 'followupsJson',
+  followups: 'followupsJson',
+  fups: 'followupsJson',
 };
 
 function normalizarChave(s: string): string {
@@ -290,24 +302,79 @@ export class ImportService {
           const [, d, m, y, t] = dtMatch;
           dataFollowup = `${y}-${m}-${d}${t ? ' ' + t + ':00' : ' 09:00:00'}`;
         } else if (/^\d{4}-\d{2}-\d{2}/.test(followupRaw)) {
-          dataFollowup = followupRaw;
+          // Remove timezone offset se presente (ex: 2026-09-01T09:00:00-03:00 → 2026-09-01 09:00:00)
+          // O banco armazena sem timezone; a hora local já é BRT
+          dataFollowup = followupRaw
+            .replace('T', ' ')
+            .replace(/[+-]\d{2}:\d{2}$/, '')
+            .slice(0, 19);
+          if (dataFollowup.length === 10) dataFollowup += ' 09:00:00';
         }
       }
 
+      // ── Detecta colunas de FUP dinamicamente (ex: DATA FUP 1, OBS FUP 1…) ──
+      const fupEntries: { data: string; obs: string }[] = [];
+      for (let n = 1; n <= 5; n++) {
+        // Procura colunas com padrões: "DATA FUP N", "FUP N DATA", "DATA FOLLOWUP N"
+        const fupDataPatterns = [`data fup ${n}`, `fup ${n} data`, `data followup ${n}`, `data fup${n}`];
+        const fupObsPatterns  = [`obs fup ${n}`, `fup ${n} obs`, `obs followup ${n}`, `obs fup${n}`];
+
+        // Índice da data do FUP N — busca no cabeçalho original
+        let fupDataIdx = -1;
+        let fupObsIdx  = -1;
+        for (let ci = 0; ci < cabecalho.length; ci++) {
+          const norm = normalizarChave(cabecalho[ci]);
+          // Identifica coluna de data: "DATA FUP N" onde N é o número
+          if (fupDataPatterns.includes(norm)) fupDataIdx = ci;
+          if (fupObsPatterns.includes(norm))  fupObsIdx  = ci;
+        }
+
+        // Fallback: detecta por posição relativa para formato "DATA FUP N, OBS, DATA FUP N+1…"
+        // Padrão do CSV Pedro: cols 6,7 = DATA FUP1,OBS; 8,9 = DATA FUP2,OBS; 10,11 = DATA FUP3,OBS
+        if (fupDataIdx < 0) {
+          // Procura cabeçalho que contenha "fup" + número na posição
+          for (let ci = 0; ci < cabecalho.length; ci++) {
+            const norm = normalizarChave(cabecalho[ci]);
+            // Tenta casar "data fup 1", "data fup1", "fup 1", etc.
+            if (new RegExp(`(data\s*)?fup\s*${n}$`).test(norm) && fupDataIdx < 0) fupDataIdx = ci;
+            // OBS logo após a data do FUP (índice + 1)
+          }
+          if (fupDataIdx >= 0 && fupObsIdx < 0) fupObsIdx = fupDataIdx + 1;
+        }
+
+        if (fupDataIdx < 0) continue;
+
+        const fupDataRaw = (linha[fupDataIdx] || '').trim();
+        const fupObsRaw  = fupObsIdx >= 0 ? (linha[fupObsIdx] || '').trim() : '';
+        const fupDataIso = normalizarData(fupDataRaw);
+        if (!fupDataIso) continue;
+
+        fupEntries.push({ data: fupDataIso, obs: fupObsRaw });
+      }
+
+      // Prioriza coluna followupsJson direta (CSV já convertido); fallback para fupEntries detectados
+      const followupsJsonDireto = get('followupsJson') || null;
+      const followupsJson = followupsJsonDireto || (fupEntries.length > 0 ? JSON.stringify(fupEntries) : null);
+
+      // Detalhamento (status final do lead)
+      const detalhamento = get('detalhamento') || null;
+
       dtos.push({
-        cliente:      clienteVal,
+        cliente:       clienteVal,
         tipo,
-        nomeLead:     get('nomeLead')    || null,
-        cargo:        get('cargo')       || null,
-        empresa:      get('empresa')     || null,
-        segmento:     get('segmento')    || null,
-        campanha:     get('campanha')    || campanhaExtraida || null,
-        dataAvanco:   data,
-        responsavel:  get('responsavel') || null,
-        observacao:   get('observacao')  || null,
-        importadoDe:  nomeArquivo,
-        dataFollowup: dataFollowup || null,
-        tratativa:    get('tratativa')   || null,
+        nomeLead:      get('nomeLead')    || null,
+        cargo:         get('cargo')       || null,
+        empresa:       get('empresa')     || null,
+        segmento:      get('segmento')    || null,
+        campanha:      get('campanha')    || campanhaExtraida || null,
+        dataAvanco:    data,
+        responsavel:   get('responsavel') || null,
+        observacao:    get('observacao')  || null,
+        importadoDe:   nomeArquivo,
+        dataFollowup:  dataFollowup || null,
+        tratativa:     get('tratativa')   || null,
+        followupsJson,
+        detalhamento,
       });
     }
 
