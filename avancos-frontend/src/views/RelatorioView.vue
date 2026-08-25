@@ -417,24 +417,11 @@ const linhasGeral = computed(() => {
              abert_pct: pct(abert, disp), resp_pct: pct(resp, abert) }
   }
 
-  const ant    = row('ant')
-  const at     = row('at')
-  const antRow = row('ant')
-  const atRow  = row('at')
-  const gerRow = row('ger')
-
-  // Geral = soma(Anterior) + soma(Atual) + soma(Geral) de todas as campanhas
-  const ger = {
-    cont:  antRow.cont  + atRow.cont  + gerRow.cont,
-    disp:  antRow.disp  + atRow.disp  + gerRow.disp,
-    abert: antRow.abert + atRow.abert + gerRow.abert,
-    resp:  antRow.resp  + atRow.resp  + gerRow.resp,
-    ench:  antRow.ench  + atRow.ench  + gerRow.ench,
-    apres: antRow.apres + atRow.apres + gerRow.apres,
-    inter: antRow.inter + atRow.inter + gerRow.inter,
-    get abert_pct() { return pct(this.abert, this.disp) },
-    get resp_pct()  { return pct(this.resp,  this.abert) },
-  }
+  const ant = row('ant')
+  const at  = row('at')
+  // Geral já é o intervalo completo (geralInicio..geralFim), que engloba
+  // Anterior e Atual — somar os três de novo contava esses períodos 2x.
+  const ger = row('ger')
 
   return [
     { key:'contatos',       icon:'🎯', label:'Contatos Atingidos', ant: fnum(ant.cont),      at: fnum(at.cont),      ger: fnum(ger.cont),      diff: diffBadge(at.cont, ant.cont) },
