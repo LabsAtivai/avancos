@@ -154,8 +154,9 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   width: 100%; padding: 6px 28px 6px 10px;
   border: 1px solid var(--border); border-radius: 6px;
   font-size: 13px; font-family: inherit; outline: none;
-  background: var(--bg);
+  background: var(--bg); color: var(--text);
 }
+.mcs-search::placeholder { color: var(--muted); }
 .mcs-search:focus { border-color: var(--brand); }
 .mcs-search-icon {
   position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
