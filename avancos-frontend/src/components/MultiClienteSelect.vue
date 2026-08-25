@@ -130,13 +130,13 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 .mcs-tags { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
 .mcs-tag {
   display: inline-flex; align-items: center; gap: 3px;
-  background: var(--brand); color: white;
-  font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: 500;
+  background: var(--brand); color: var(--on-accent);
+  font-size: 12px; padding: 2px 6px; border-radius: 10px; font-weight: 500;
   max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .mcs-tag-more { background: var(--muted); }
 .mcs-tag-x {
-  background: none; border: none; color: white; cursor: pointer;
+  background: none; border: none; color: var(--on-accent); cursor: pointer;
   padding: 0; font-size: 13px; line-height: 1; opacity: .8;
 }
 .mcs-tag-x:hover { opacity: 1; }
@@ -167,13 +167,13 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   border-bottom: 1px solid var(--border);
 }
 .mcs-action-btn {
-  font-size: 11px; padding: 2px 8px; border: 1px solid var(--border);
+  font-size: 12px; padding: 2px 8px; border: 1px solid var(--border);
   border-radius: 4px; background: var(--bg); cursor: pointer; color: var(--muted);
 }
 .mcs-action-btn:hover { border-color: var(--brand); color: var(--brand); }
-.mcs-apply { background: var(--brand); color: #fff; border-color: var(--brand); }
-.mcs-apply:hover { color: #fff; }
-.mcs-count { font-size: 11px; color: var(--muted); margin-left: auto; }
+.mcs-apply { background: var(--brand); color: var(--on-accent); border-color: var(--brand); }
+.mcs-apply:hover { color: var(--on-accent); }
+.mcs-count { font-size: 12px; color: var(--muted); margin-left: auto; }
 
 .mcs-list { max-height: 260px; overflow-y: auto; }
 .mcs-item {
@@ -184,7 +184,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 .mcs-item input { cursor: pointer; flex-shrink: 0; }
 .mcs-nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mcs-total {
-  font-size: 11px; color: var(--muted); background: var(--bg);
+  font-size: 12px; color: var(--muted); background: var(--bg);
   padding: 1px 6px; border-radius: 10px; flex-shrink: 0;
 }
 .mcs-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 13px; }

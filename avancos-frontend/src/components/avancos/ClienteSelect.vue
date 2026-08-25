@@ -161,7 +161,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 
 .cs-nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cs-total {
-  flex-shrink: 0; font-size: 11px; color: var(--muted);
+  flex-shrink: 0; font-size: 12px; color: var(--muted);
   background: var(--bg); border-radius: 10px;
   padding: 1px 7px; font-weight: 500;
 }

@@ -658,7 +658,7 @@ function linhasMetricas(item, incluirAvancos = false) {
 
 <style scoped>
 .periodo-label {
-  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
   letter-spacing: .05em; color: var(--muted); margin-bottom: 6px;
 }
 .periodo-label.brand { color: var(--brand); }
@@ -669,8 +669,8 @@ function linhasMetricas(item, incluirAvancos = false) {
 }
 .campanha-row:last-child { border-bottom: none; }
 .campanha-row.arquivada { opacity: 0.55; }
-.badge-ativa     { font-size: 10px; color: var(--success); background: #f0fdf4; padding: 1px 6px; border-radius: 10px; }
-.badge-arquivada { font-size: 10px; color: var(--muted);   background: var(--bg);  padding: 1px 6px; border-radius: 10px; }
+.badge-ativa     { font-size: 12px; color: var(--success); background: rgba(76,175,114,.15); padding: 1px 6px; border-radius: 10px; }
+.badge-arquivada { font-size: 12px; color: var(--muted);   background: var(--bg);  padding: 1px 6px; border-radius: 10px; }
 
 /* Cards de totais */
 .totais-grid {
@@ -680,7 +680,7 @@ function linhasMetricas(item, incluirAvancos = false) {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 16px; display: flex; flex-direction: column; gap: 4px;
 }
-.total-label { font-size: 11px; color: var(--muted); font-weight: 500; }
+.total-label { font-size: 12px; color: var(--muted); font-weight: 500; }
 .total-val   { font-size: 26px; font-weight: 700; color: var(--text); }
 .total-val.accent { color: var(--brand); }
 .total-diff  { font-size: 12px; color: var(--muted); }
@@ -691,13 +691,13 @@ function linhasMetricas(item, incluirAvancos = false) {
 .avancos-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .av-mini { background: var(--bg); border-radius: 6px; padding: 8px; text-align: center; }
 .av-mini.brand   { background: var(--brand-light); }
-.av-mini.success { background: #f0fdf4; }
-.av-mini.warning { background: #fffbeb; }
+.av-mini.success { background: rgba(76,175,114,.12); }
+.av-mini.warning { background: rgba(255,167,38,.12); }
 .av-num { font-size: 20px; font-weight: 700; color: var(--text); }
 .av-mini.brand .av-num   { color: var(--brand); }
 .av-mini.success .av-num { color: var(--success); }
 .av-mini.warning .av-num { color: var(--warning); }
-.av-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.av-lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
 /* Tabela */
 .metricas-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
@@ -713,10 +713,10 @@ function linhasMetricas(item, incluirAvancos = false) {
 .sub-th-atual { background: rgba(255,107,0,.08) !important; color: #FF8C00; }
 .sub-th-total { background: rgba(255,107,0,.16) !important; color: #FF6B00; font-weight: 600; }
 .periodo-badge {
-  font-size: 11px; font-weight: 400; color: var(--muted);
+  font-size: 12px; font-weight: 400; color: var(--muted);
 }
 .sub-th {
-  padding: 5px 8px; text-align: right; font-size: 10px; color: var(--muted);
+  padding: 5px 8px; text-align: right; font-size: 12px; color: var(--muted);
   font-weight: 500; border-bottom: 2px solid var(--border);
   border-left: 1px solid var(--border);
 }
@@ -806,7 +806,7 @@ function linhasMetricas(item, incluirAvancos = false) {
 }
 .metricas-resumo-table th {
   background: var(--brand);
-  color: #ffffff;
+  color: var(--on-accent);
   font-size: 15px;
   font-weight: 800;
   text-align: center;
@@ -823,9 +823,9 @@ function linhasMetricas(item, incluirAvancos = false) {
 .metricas-resumo-table th span {
   display: inline-block;
   margin-top: 3px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  color: rgba(255,255,255,.9);
+  color: rgba(26,18,16,.75);
 }
 .col-metrica { width: 32%; }
 .period-col { width: 22.66%; }
@@ -857,7 +857,7 @@ function linhasMetricas(item, incluirAvancos = false) {
 .metrica-label small {
   display: block;
   margin-top: 2px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.2;
 }
@@ -894,14 +894,14 @@ function linhasMetricas(item, incluirAvancos = false) {
   min-height: 100%;
 }
 .metric-value.geral { color: #7c3aed; }
-.metric-value:hover { background: #ffedd5 !important; }
+.metric-value:hover { background: var(--brand-light) !important; }
 .diff-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 4px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;

@@ -131,7 +131,7 @@
 
           <div class="form-group">
             <label class="form-label">Cliente *
-              <span style="color:var(--muted);font-weight:400;font-size:11px"> — igual ao nome em Avanços</span>
+              <span style="color:var(--muted);font-weight:400;font-size:12px"> — igual ao nome em Avanços</span>
             </label>
             <input v-model="form.cliente" class="form-control" placeholder="Ex: AKSUM" list="clientes-cred" />
             <datalist id="clientes-cred">
@@ -387,10 +387,10 @@ function copiar(texto) {
   flex-shrink: 0;
 }
 .cred-nome    { font-size: 14px; font-weight: 700; color: white; }
-.cred-email-sub { font-size: 11px; color: rgba(255,255,255,.75); margin-top: 1px; }
+.cred-email-sub { font-size: 12px; color: rgba(255,255,255,.75); margin-top: 1px; }
 
-.status-ativo   { font-size: 10px; font-weight: 600; background: rgba(255,255,255,.2); color: white; padding: 2px 8px; border-radius: 10px; }
-.status-inativo { font-size: 10px; font-weight: 600; background: rgba(0,0,0,.2); color: rgba(255,255,255,.6); padding: 2px 8px; border-radius: 10px; }
+.status-ativo   { font-size: 12px; font-weight: 600; background: rgba(255,255,255,.2); color: white; padding: 2px 8px; border-radius: 10px; }
+.status-inativo { font-size: 12px; font-weight: 600; background: rgba(0,0,0,.2); color: rgba(255,255,255,.6); padding: 2px 8px; border-radius: 10px; }
 
 .icon-btn {
   width: 28px; height: 28px; border-radius: 6px;
@@ -405,7 +405,7 @@ function copiar(texto) {
 .cred-section:last-child { border-bottom: none; }
 
 .cred-section-title {
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
   letter-spacing: .06em; color: var(--muted);
   display: flex; align-items: center; gap: 5px; margin-bottom: 8px;
 }
@@ -413,7 +413,7 @@ function copiar(texto) {
 .cred-fields { display: flex; flex-direction: column; gap: 6px; }
 .cred-field  { display: flex; align-items: baseline; gap: 8px; }
 .cred-field-label {
-  font-size: 11px; color: var(--muted); font-weight: 500;
+  font-size: 12px; color: var(--muted); font-weight: 500;
   min-width: 80px; flex-shrink: 0;
 }
 .cred-field-value {
@@ -421,7 +421,7 @@ function copiar(texto) {
   display: flex; align-items: center; gap: 4px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.cred-field-value.mono { font-family: monospace; font-size: 11px; }
+.cred-field-value.mono { font-family: monospace; font-size: 12px; }
 
 .copy-btn {
   flex-shrink: 0; background: none; border: none; cursor: pointer;
@@ -437,7 +437,7 @@ function copiar(texto) {
   padding: 14px; margin-bottom: 14px;
 }
 .form-section-title {
-  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
   letter-spacing: .05em; margin-bottom: 12px;
 }
 .form-section-title.gmail { color: var(--brand); }

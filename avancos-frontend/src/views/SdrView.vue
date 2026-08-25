@@ -553,7 +553,7 @@ function toDatetimeLocal(d) {
   cursor: pointer; color: var(--muted); font-weight: 500;
   transition: all .15s;
 }
-.sdr-btn.ativo { background: var(--brand); color: white; border-color: var(--brand); }
+.sdr-btn.ativo { background: var(--brand); color: var(--on-accent); border-color: var(--brand); }
 .sdr-btn:not(.ativo):hover { background: var(--brand-light); color: var(--brand); }
 
 .followup-badge {
@@ -571,40 +571,40 @@ function toDatetimeLocal(d) {
 .sdr-table thead th {
   padding: 10px 12px; background: var(--bg);
   border-bottom: 2px solid var(--border);
-  text-align: left; font-size: 11px; font-weight: 600;
+  text-align: left; font-size: 12px; font-weight: 600;
   color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
   white-space: nowrap;
 }
 .sdr-table tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
-.sdr-table tbody tr:hover { background: #f8fafd; }
+.sdr-table tbody tr:hover { background: var(--surface-2); }
 .sdr-table td { padding: 10px 12px; vertical-align: top; }
 
 /* Status rows */
-.row-vencido { background: #fff5f5 !important; }
-.row-vencido:hover { background: #fee2e2 !important; }
-.row-vencido td:first-child { border-left: 3px solid #dc2626; }
-.row-hoje    { background: #fffdf0 !important; }
-.row-hoje:hover { background: #fef9c3 !important; }
-.row-hoje td:first-child { border-left: 3px solid #ca8a04; }
+.row-vencido { background: rgba(255,77,77,.12) !important; }
+.row-vencido:hover { background: rgba(255,77,77,.20) !important; }
+.row-vencido td:first-child { border-left: 3px solid var(--danger); }
+.row-hoje    { background: rgba(255,167,38,.12) !important; }
+.row-hoje:hover { background: rgba(255,167,38,.20) !important; }
+.row-hoje td:first-child { border-left: 3px solid var(--warning); }
 
 .td-main { font-weight: 500; color: var(--text); }
-.td-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.td-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
 /* Follow-up cell */
 .followup-cell { display: flex; align-items: center; gap: 4px; }
 .followup-input {
-  font-size: 11px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12px; border: 1px solid var(--border); border-radius: 6px;
   padding: 4px 6px; background: var(--bg); color: var(--text);
   max-width: 150px; cursor: pointer;
 }
 .followup-input:focus { outline: none; border-color: var(--brand); }
-.followup-input.row-vencido { border-color: #dc2626; color: #dc2626; background: #fff5f5; }
-.followup-input.row-hoje    { border-color: #ca8a04; color: #ca8a04; background: #fffdf0; }
+.followup-input.row-vencido { border-color: var(--danger); color: var(--danger); background: rgba(255,77,77,.12); }
+.followup-input.row-hoje    { border-color: var(--warning); color: var(--warning); background: rgba(255,167,38,.12); }
 .clear-btn {
   background: none; border: none; cursor: pointer;
   color: var(--muted); font-size: 15px; padding: 0 2px;
 }
-.clear-btn:hover { color: #dc2626; }
+.clear-btn:hover { color: var(--danger); }
 
 /* Tratativa */
 .tratativa-td { min-width: 200px; max-width: 280px; }
@@ -618,7 +618,7 @@ function toDatetimeLocal(d) {
 .tratativa-input:focus { outline: none; background: var(--surface); border-color: var(--brand); }
 
 .responsavel-chip {
-  font-size: 11px; background: var(--bg); border: 1px solid var(--border);
+  font-size: 12px; background: var(--bg); border: 1px solid var(--border);
   padding: 2px 8px; border-radius: 10px; color: var(--muted);
   white-space: nowrap;
 }

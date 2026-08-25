@@ -77,8 +77,8 @@
 
 .main { margin-left: 220px; flex: 1; min-height: 100vh; background: #111111; }
 .nav-badge {
-  background: #FF4D4D; color: white; font-size: 10px; font-weight: 700;
-  padding: 1px 5px; border-radius: 10px; margin-left: auto;
+  background: #FF4D4D; color: var(--on-accent); font-size: 12px; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px; margin-left: auto;
 }
 </style>
 
