@@ -284,7 +284,7 @@ import api, { avancosApi } from '@/services/api'
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 
-const sdrs     = ['Leandro', 'Pedro', 'Ana Carolina', 'Henrique', 'Latifi', 'Nicolly', 'Victória']
+const sdrs     = ref(['Leandro', 'Pedro', 'Ana Carolina', 'Henrique', 'Latifi', 'Nicolly', 'Victória'])
 const tipos    = ['Interessado', 'Apresentação', 'Encaminhamento', 'Nutrição']
 const LIMITE   = 100
 
@@ -321,7 +321,11 @@ const totalPaginas = computed(() => Math.max(1, Math.ceil(total.value / LIMITE))
 onMounted(() => {
   carregar()
   carregarBadge()
-  avancosApi.opcoes().then(r => { opcoes.clientes = r.data.clientes || [] })
+  avancosApi.opcoes().then(r => {
+    opcoes.clientes = r.data.clientes || []
+    const responsaveis = r.data.responsaveis || []
+    sdrs.value = [...new Set([...sdrs.value, ...responsaveis])].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  })
   // Atualiza badge a cada minuto
   const timer = setInterval(carregarBadge, 60000)
   onUnmounted(() => clearInterval(timer))
