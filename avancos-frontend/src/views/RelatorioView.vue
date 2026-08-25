@@ -28,11 +28,21 @@
           </div>
         </div>
 
+        <!-- Tipo de relatório -->
+        <div class="card card-body">
+          <div class="form-label" style="font-weight:600;margin-bottom:10px">Tipo de relatório</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="tipo-btn" :class="{ ativo: tipoRelatorio === 'recorrente' }" @click="tipoRelatorio = 'recorrente'">Recorrente</button>
+            <button type="button" class="tipo-btn" :class="{ ativo: tipoRelatorio === 'primeira' }" @click="tipoRelatorio = 'primeira'">Primeira reunião</button>
+            <button type="button" class="tipo-btn" :class="{ ativo: tipoRelatorio === 'encerramento' }" @click="tipoRelatorio = 'encerramento'">Encerramento</button>
+          </div>
+        </div>
+
         <!-- Períodos -->
         <div class="card card-body">
           <div class="form-label" style="font-weight:600;margin-bottom:12px">Períodos</div>
 
-          <div style="margin-bottom:12px">
+          <div style="margin-bottom:12px" v-if="periodosAtivos.includes('at')">
             <div class="periodo-label brand">Atual</div>
             <div class="form-row cols-2">
               <div class="form-group" style="margin:0">
@@ -46,7 +56,7 @@
             </div>
           </div>
 
-          <div style="margin-bottom:12px">
+          <div style="margin-bottom:12px" v-if="periodosAtivos.includes('ant')">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
               <div class="periodo-label" style="margin:0">Anterior</div>
               <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer">
@@ -66,7 +76,7 @@
             </div>
           </div>
 
-          <div>
+          <div v-if="periodosAtivos.includes('ger')">
             <div class="periodo-label">Geral</div>
             <div class="form-row cols-2">
               <div class="form-group" style="margin:0">
@@ -187,30 +197,30 @@
           <!-- Cards de totais -->
           <div class="totais-grid">
             <div class="total-card">
-              <div class="total-label">Contatos Atingidos (Atual)</div>
-              <div class="total-val">{{ fnum(metricas.total.at.contatos) }}</div>
-              <div class="total-diff" :class="diff(metricas.total.at.contatos, metricas.total.ant.contatos).cls">
+              <div class="total-label">Contatos Atingidos ({{ periodoPrincipalLabel }})</div>
+              <div class="total-val">{{ fnum(metricas.total[periodoPrincipal].contatos) }}</div>
+              <div v-if="periodosAtivos.includes('ant')" class="total-diff" :class="diff(metricas.total.at.contatos, metricas.total.ant.contatos).cls">
                 {{ diff(metricas.total.at.contatos, metricas.total.ant.contatos).txt }} vs anterior
               </div>
             </div>
             <div class="total-card">
-              <div class="total-label">Disparos (Atual)</div>
-              <div class="total-val">{{ fnum(metricas.total.at.disparos) }}</div>
-              <div class="total-diff" :class="diff(metricas.total.at.disparos, metricas.total.ant.disparos).cls">
+              <div class="total-label">Disparos ({{ periodoPrincipalLabel }})</div>
+              <div class="total-val">{{ fnum(metricas.total[periodoPrincipal].disparos) }}</div>
+              <div v-if="periodosAtivos.includes('ant')" class="total-diff" :class="diff(metricas.total.at.disparos, metricas.total.ant.disparos).cls">
                 {{ diff(metricas.total.at.disparos, metricas.total.ant.disparos).txt }} vs anterior
               </div>
             </div>
             <div class="total-card">
-              <div class="total-label">Respostas (Atual)</div>
-              <div class="total-val accent">{{ fnum(metricas.total.at.respostas) }}</div>
-              <div class="total-diff" :class="diff(metricas.total.at.respostas, metricas.total.ant.respostas).cls">
+              <div class="total-label">Respostas ({{ periodoPrincipalLabel }})</div>
+              <div class="total-val accent">{{ fnum(metricas.total[periodoPrincipal].respostas) }}</div>
+              <div v-if="periodosAtivos.includes('ant')" class="total-diff" :class="diff(metricas.total.at.respostas, metricas.total.ant.respostas).cls">
                 {{ diff(metricas.total.at.respostas, metricas.total.ant.respostas).txt }} vs anterior
               </div>
             </div>
             <div class="total-card">
-              <div class="total-label">Taxa Resposta (Atual)</div>
-              <div class="total-val accent">{{ metricas.total.at.resp_pct }}%</div>
-              <div class="total-diff" :class="diff(metricas.total.at.resp_pct, metricas.total.ant.resp_pct).cls">
+              <div class="total-label">Taxa Resposta ({{ periodoPrincipalLabel }})</div>
+              <div class="total-val accent">{{ metricas.total[periodoPrincipal].resp_pct }}%</div>
+              <div v-if="periodosAtivos.includes('ant')" class="total-diff" :class="diff(metricas.total.at.resp_pct, metricas.total.ant.resp_pct).cls">
                 {{ diff(metricas.total.at.resp_pct, metricas.total.ant.resp_pct).txt }} vs anterior
               </div>
             </div>
@@ -230,9 +240,9 @@
                 <thead>
                   <tr>
                     <th class="col-metrica">Métricas</th>
-                    <th class="period-col anterior">Anterior<br><span>{{ fdata(form.anterior.inicio) }} até {{ fdata(form.anterior.fim) }}</span></th>
-                    <th class="period-col atual">Atual<br><span>{{ fdata(form.atual.inicio) }} até {{ fdata(form.atual.fim) }}</span></th>
-                    <th class="period-col geral">Geral<br><span>Desde {{ fdata(form.geral.inicio) }}</span></th>
+                    <th v-if="periodosAtivos.includes('ant')" class="period-col anterior" :style="{ width: periodoColWidth }">Anterior<br><span>{{ fdata(form.anterior.inicio) }} até {{ fdata(form.anterior.fim) }}</span></th>
+                    <th v-if="periodosAtivos.includes('at')" class="period-col atual" :style="{ width: periodoColWidth }">Atual<br><span>{{ fdata(form.atual.inicio) }} até {{ fdata(form.atual.fim) }}</span></th>
+                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>Desde {{ fdata(form.geral.inicio) }}</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -241,12 +251,12 @@
                       <span class="metric-icon">{{ r.icon }}</span>
                       <div><strong>{{ r.label }}</strong></div>
                     </td>
-                    <td class="metric-value anterior" @click="copiar(r.ant)">{{ r.ant }}</td>
-                    <td class="metric-value atual" @click="copiar(r.at)">
+                    <td v-if="periodosAtivos.includes('ant')" class="metric-value anterior" @click="copiar(r.ant)">{{ r.ant }}</td>
+                    <td v-if="periodosAtivos.includes('at')" class="metric-value atual" @click="copiar(r.at)">
                       {{ r.at }}
                       <span v-if="r.diff" class="diff-pill" :class="r.diff.cls">{{ r.diff.txt }}</span>
                     </td>
-                    <td class="metric-value geral" @click="copiar(r.ger)">{{ r.ger }}</td>
+                    <td v-if="periodosAtivos.includes('ger')" class="metric-value geral" @click="copiar(r.ger)">{{ r.ger }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -264,9 +274,9 @@
                 <thead>
                   <tr>
                     <th class="col-metrica">Métricas</th>
-                    <th class="period-col anterior">Anterior<br><span>{{ fdata(form.anterior.inicio) }} até {{ fdata(form.anterior.fim) }}</span></th>
-                    <th class="period-col atual">Atual<br><span>{{ fdata(form.atual.inicio) }} até {{ fdata(form.atual.fim) }}</span></th>
-                    <th class="period-col geral">Geral<br><span>Desde {{ fdata(form.geral.inicio) }}</span></th>
+                    <th v-if="periodosAtivos.includes('ant')" class="period-col anterior" :style="{ width: periodoColWidth }">Anterior<br><span>{{ fdata(form.anterior.inicio) }} até {{ fdata(form.anterior.fim) }}</span></th>
+                    <th v-if="periodosAtivos.includes('at')" class="period-col atual" :style="{ width: periodoColWidth }">Atual<br><span>{{ fdata(form.atual.inicio) }} até {{ fdata(form.atual.fim) }}</span></th>
+                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>Desde {{ fdata(form.geral.inicio) }}</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,14 +285,14 @@
                       <span class="metric-icon">{{ r.icon }}</span>
                       <div><strong>{{ r.label }}</strong><small>{{ r.desc }}</small></div>
                     </td>
-                    <td class="metric-value anterior">
+                    <td v-if="periodosAtivos.includes('ant')" class="metric-value anterior">
                       <input v-if="r.editavel"
                         :value="editValue(c.id, r.key, 'ant', r.ant)"
                         @input="setEdit(c.id, r.key, 'ant', $event.target.value); recalcular()"
                         @click.stop type="number" min="0" class="edit-input" placeholder="0" />
                       <span v-else @click="copiar(r.ant)">{{ r.ant }}</span>
                     </td>
-                    <td class="metric-value atual">
+                    <td v-if="periodosAtivos.includes('at')" class="metric-value atual">
                       <input v-if="r.editavel"
                         :value="editValue(c.id, r.key, 'at', r.at)"
                         @input="setEdit(c.id, r.key, 'at', $event.target.value); recalcular()"
@@ -292,7 +302,7 @@
                         <span v-if="r.diff" class="diff-pill" :class="r.diff.cls">{{ r.diff.txt }}</span>
                       </template>
                     </td>
-                    <td class="metric-value geral">
+                    <td v-if="periodosAtivos.includes('ger')" class="metric-value geral">
                       <input v-if="r.editavel"
                         :value="editValue(c.id, r.key, 'ger', r.ger)"
                         @input="setEdit(c.id, r.key, 'ger', $event.target.value); recalcular()"
@@ -336,6 +346,23 @@ const form = reactive({
   anterior: { inicio: '', fim: '' },
   geral:    { inicio: '', fim: '' },
 })
+
+// Tipo de relatório — define quais períodos fazem sentido mostrar:
+// primeira reunião não tem "anterior" pra comparar; encerramento só
+// importa o total geral acumulado, não a quebra por período.
+const tipoRelatorio = ref('recorrente') // 'recorrente' | 'primeira' | 'encerramento'
+
+const periodosAtivos = computed(() => {
+  if (tipoRelatorio.value === 'primeira')     return ['at']
+  if (tipoRelatorio.value === 'encerramento') return ['ger']
+  return ['ant', 'at', 'ger']
+})
+
+const periodoColWidth = computed(() => `${(68 / periodosAtivos.value.length).toFixed(2)}%`)
+
+// Período "principal" dos cards de totais no topo — Geral no encerramento, Atual nos outros
+const periodoPrincipal      = computed(() => tipoRelatorio.value === 'encerramento' ? 'ger' : 'at')
+const periodoPrincipalLabel = computed(() => tipoRelatorio.value === 'encerramento' ? 'Geral' : 'Atual')
 
 const opcoes              = reactive({ clientes: [] })
 const anteriorAuto        = ref(true)
@@ -662,6 +689,15 @@ function linhasMetricas(item, incluirAvancos = false) {
   letter-spacing: .05em; color: var(--muted); margin-bottom: 6px;
 }
 .periodo-label.brand { color: var(--brand); }
+
+.tipo-btn {
+  font-size: 12px; padding: 6px 12px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--bg);
+  cursor: pointer; color: var(--muted); font-weight: 500;
+  transition: all .15s;
+}
+.tipo-btn.ativo { background: var(--brand); color: var(--on-accent); border-color: var(--brand); }
+.tipo-btn:not(.ativo):hover { border-color: var(--brand); color: var(--brand); }
 
 .campanha-row {
   padding: 8px 12px; border-bottom: 1px solid var(--border);

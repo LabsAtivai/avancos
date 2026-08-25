@@ -318,12 +318,19 @@ const totalPaginas = computed(() => Math.max(1, Math.ceil(total.value / LIMITE))
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
+// Filtra valores de "responsavel" que nao parecem nome de pessoa —
+// dados sujos de import de CSV (ex: "5mil", "10mil", "s") acabam indo
+// parar nesse campo e nao devem aparecer como opcao de SDR
+function pareceNome(s) {
+  return /^[a-zà-ÿ\s'.-]{2,}$/i.test((s || '').trim())
+}
+
 onMounted(() => {
   carregar()
   carregarBadge()
   avancosApi.opcoes().then(r => {
     opcoes.clientes = r.data.clientes || []
-    const responsaveis = r.data.responsaveis || []
+    const responsaveis = (r.data.responsaveis || []).filter(pareceNome)
     sdrs.value = [...new Set([...sdrs.value, ...responsaveis])].sort((a, b) => a.localeCompare(b, 'pt-BR'))
   })
   // Atualiza badge a cada minuto
