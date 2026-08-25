@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  avancos-frontend:
+    build: .
+    container_name: avancos-frontend
+    restart: unless-stopped
+    ports:
+      - "3099:3099"
+    networks:
+      - ativaai
+networks:
+  ativaai:
+    external: true

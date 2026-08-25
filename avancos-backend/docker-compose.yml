@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  avancos-backend:
+    build: .
+    container_name: avancos-backend
+    restart: unless-stopped
+    ports:
+      - "3098:3098"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME:-avancos_comerciais}
+      PORT: 3098
+    networks:
+      - ativaai
+networks:
+  ativaai:
+    external: true
