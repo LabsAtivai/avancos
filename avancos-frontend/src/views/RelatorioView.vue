@@ -920,15 +920,7 @@ function linhasMetricas(item, incluirAvancos = false) {
   white-space: normal;
 }
 .metric-value.anterior { color: var(--brand); }
-.metric-value.atual {
-  color: var(--success);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  min-height: 100%;
-}
+.metric-value.atual { color: var(--success); }
 .metric-value.geral { color: #7c3aed; }
 .metric-value:hover { background: var(--brand-light) !important; }
 .diff-pill {
@@ -936,11 +928,13 @@ function linhasMetricas(item, incluirAvancos = false) {
   align-items: center;
   justify-content: center;
   padding: 4px 8px;
+  margin-left: 8px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
+  vertical-align: middle;
 }
 .diff-pill.up {
   color: #166534;
