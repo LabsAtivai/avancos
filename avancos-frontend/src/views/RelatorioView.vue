@@ -302,7 +302,13 @@
                         <span v-if="r.diff" class="diff-pill" :class="r.diff.cls">{{ r.diff.txt }}</span>
                       </template>
                     </td>
-                    <td v-if="periodosAtivos.includes('ger')" class="metric-value geral" @click="copiar(r.ger)">{{ r.ger }}</td>
+                    <td v-if="periodosAtivos.includes('ger')" class="metric-value geral">
+                      <input v-if="r.editavel"
+                        :value="editValue(c.id, r.key, 'ger', r.ger)"
+                        @input="setEdit(c.id, r.key, 'ger', $event.target.value); recalcular()"
+                        @click.stop type="number" min="0" class="edit-input" placeholder="0" />
+                      <span v-else @click="copiar(r.ger)">{{ r.ger }}</span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -440,18 +446,30 @@ const linhasGeral = computed(() => {
 
   const ant = row('ant')
   const at  = row('at')
-  // Geral = Anterior + Atual, sempre — soma direta dos totais já calculados acima.
-  const ger = {
-    cont:  ant.cont  + at.cont,
-    disp:  ant.disp  + at.disp,
-    abert: ant.abert + at.abert,
-    resp:  ant.resp  + at.resp,
-    ench:  ant.ench  + at.ench,
-    apres: ant.apres + at.apres,
-    inter: ant.inter + at.inter,
-    abert_pct: pct(ant.abert + at.abert, ant.disp  + at.disp),
-    resp_pct:  pct(ant.resp  + at.resp,  ant.abert + at.abert),
+  // Geral = soma do valor efetivo de cada campanha (override de Geral se digitado
+  // diretamente nela, senão Anterior+Atual daquela campanha) — respeita overrides individuais.
+  const somaGer = (campo) => {
+    return campanhas.reduce((acc, c) => {
+      const kGer = editKey(c.id, campo, 'ger')
+      if (kGer in editOverrides) return acc + Number(editOverrides[kGer] || 0)
+      const kAnt = editKey(c.id, campo, 'ant')
+      const kAt  = editKey(c.id, campo, 'at')
+      const antVal = kAnt in editOverrides ? editOverrides[kAnt] : (c.ant?.[campo] ?? 0)
+      const atVal  = kAt  in editOverrides ? editOverrides[kAt]  : (c.at?.[campo]  ?? 0)
+      return acc + Number(antVal || 0) + Number(atVal || 0)
+    }, 0)
   }
+  const ger = {
+    cont:  somaGer('contatos'),
+    disp:  somaGer('disparos'),
+    abert: somaGer('aberturas'),
+    resp:  somaGer('respostas'),
+    ench:  somaGer('encaminhamento'),
+    apres: somaGer('apresentacao'),
+    inter: somaGer('interessados'),
+  }
+  ger.abert_pct = pct(ger.abert, ger.disp)
+  ger.resp_pct  = pct(ger.resp,  ger.abert)
 
   return [
     { key:'contatos',       icon:'🎯', label:'Contatos Atingidos', ant: fnum(ant.cont),      at: fnum(at.cont),      ger: fnum(ger.cont),      diff: diffBadge(at.cont, ant.cont) },
@@ -667,15 +685,20 @@ function linhasMetricas(item, incluirAvancos = false) {
 
   const id = item.id ?? 'total'
 
-  // Geral = Anterior + Atual, sempre — nunca digitado, nunca vem de outra query.
+  // Geral = Anterior + Atual por padrão, mas pode ser sobrescrito manualmente.
   const pctCalc  = (a, b) => b ? parseFloat((a / b * 100).toFixed(2)) : 0
   const somaAntAt = (campo, valAnt, valAt) =>
     editNum(id, campo, 'ant', valAnt) + editNum(id, campo, 'at', valAt)
+  // Valor efetivo de Geral: override digitado direto nele, senão soma de Anterior+Atual
+  const gerEff = (campo, valAnt, valAt) => {
+    const k = editKey(id, campo, 'ger')
+    return k in editOverrides ? Number(editOverrides[k]) : somaAntAt(campo, valAnt, valAt)
+  }
 
-  const contGer = somaAntAt('contatos',  ant.contatos,  at.contatos)
-  const dispGer = somaAntAt('disparos',  ant.disparos,  at.disparos)
-  const abGer   = somaAntAt('aberturas', ant.aberturas, at.aberturas)
-  const respGer = somaAntAt('respostas', ant.respostas, at.respostas)
+  const contGer = gerEff('contatos',  ant.contatos,  at.contatos)
+  const dispGer = gerEff('disparos',  ant.disparos,  at.disparos)
+  const abGer   = gerEff('aberturas', ant.aberturas, at.aberturas)
+  const respGer = gerEff('respostas', ant.respostas, at.respostas)
 
   const base = [
     { key: 'contatos',  label: 'Contatos Atingidos', desc: 'Total de contatos alcançados',   icon: '🎯', editavel: true,  ant: fnum(ant.contatos),  at: fnum(at.contatos),  ger: fnum(contGer),  diff: diffBadge(at.contatos, ant.contatos) },
@@ -686,8 +709,11 @@ function linhasMetricas(item, incluirAvancos = false) {
     { key: 'resp_pct',  label: 'Respostas %',          desc: 'Calculado: Respostas / Aberturas',icon: '%', editavel: false, ant: fpct(getPct(id,'resp_pct','ant',ant.resp_pct)),  at: fpct(getPct(id,'resp_pct','at',at.resp_pct)),  ger: fpct(pctCalc(respGer, abGer)), diff: null },
   ]
 
-  // Avanços — inputs manuais em Anterior/Atual; Geral soma os dois, mostra '—' se nada foi digitado ainda
+  // Avanços — inputs manuais em Anterior/Atual/Geral; Geral soma os dois por padrão,
+  // mas aceita override direto; mostra '—' se nada foi digitado em lugar nenhum ainda.
   const avancoGer = (campo) => {
+    const kGer = editKey(id, campo, 'ger')
+    if (kGer in editOverrides) return fnum(editOverrides[kGer])
     const kAnt = editKey(id, campo, 'ant')
     const kAt  = editKey(id, campo, 'at')
     if (!(kAnt in editOverrides) && !(kAt in editOverrides)) return '—'
