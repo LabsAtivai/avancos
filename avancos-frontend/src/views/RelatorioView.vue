@@ -242,7 +242,7 @@
                     <th class="col-metrica">Métricas</th>
                     <th v-if="periodosAtivos.includes('ant')" class="period-col anterior" :style="{ width: periodoColWidth }">Anterior<br><span>{{ fdata(form.anterior.inicio) }} até {{ fdata(form.anterior.fim) }}</span></th>
                     <th v-if="periodosAtivos.includes('at')" class="period-col atual" :style="{ width: periodoColWidth }">Atual<br><span>{{ fdata(form.atual.inicio) }} até {{ fdata(form.atual.fim) }}</span></th>
-                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>Desde {{ fdata(form.geral.inicio) }}</span></th>
+                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>Anterior + Atual</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -276,7 +276,7 @@
                     <th class="col-metrica">Métricas</th>
                     <th v-if="periodosAtivos.includes('ant')" class="period-col anterior" :style="{ width: periodoColWidth }">Anterior<br><span>{{ fdata(form.anterior.inicio) }} até {{ fdata(form.anterior.fim) }}</span></th>
                     <th v-if="periodosAtivos.includes('at')" class="period-col atual" :style="{ width: periodoColWidth }">Atual<br><span>{{ fdata(form.atual.inicio) }} até {{ fdata(form.atual.fim) }}</span></th>
-                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>Desde {{ fdata(form.geral.inicio) }}</span></th>
+                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>Anterior + Atual</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -302,13 +302,7 @@
                         <span v-if="r.diff" class="diff-pill" :class="r.diff.cls">{{ r.diff.txt }}</span>
                       </template>
                     </td>
-                    <td v-if="periodosAtivos.includes('ger')" class="metric-value geral">
-                      <input v-if="r.editavel"
-                        :value="editValue(c.id, r.key, 'ger', r.ger)"
-                        @input="setEdit(c.id, r.key, 'ger', $event.target.value); recalcular()"
-                        @click.stop type="number" min="0" class="edit-input" placeholder="0" />
-                      <span v-else @click="copiar(r.ger)">{{ r.ger }}</span>
-                    </td>
+                    <td v-if="periodosAtivos.includes('ger')" class="metric-value geral" @click="copiar(r.ger)">{{ r.ger }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -427,7 +421,7 @@ const linhasGeral = computed(() => {
     }, 0)
   }
 
-  // Campos de avanços — sempre soma apenas os overrides manuais (sem dados do banco)
+  // Avanços — sempre soma apenas os overrides manuais (sem dados do banco)
   const somaAvanco = (campo, per) => somaNum(campo, per)
 
   const pct = (a, b) => b ? parseFloat((a / b * 100).toFixed(2)) : 0
@@ -446,9 +440,18 @@ const linhasGeral = computed(() => {
 
   const ant = row('ant')
   const at  = row('at')
-  // Geral já é o intervalo completo (geralInicio..geralFim), que engloba
-  // Anterior e Atual — somar os três de novo contava esses períodos 2x.
-  const ger = row('ger')
+  // Geral = Anterior + Atual, sempre — soma direta dos totais já calculados acima.
+  const ger = {
+    cont:  ant.cont  + at.cont,
+    disp:  ant.disp  + at.disp,
+    abert: ant.abert + at.abert,
+    resp:  ant.resp  + at.resp,
+    ench:  ant.ench  + at.ench,
+    apres: ant.apres + at.apres,
+    inter: ant.inter + at.inter,
+    abert_pct: pct(ant.abert + at.abert, ant.disp  + at.disp),
+    resp_pct:  pct(ant.resp  + at.resp,  ant.abert + at.abert),
+  }
 
   return [
     { key:'contatos',       icon:'🎯', label:'Contatos Atingidos', ant: fnum(ant.cont),      at: fnum(at.cont),      ger: fnum(ger.cont),      diff: diffBadge(at.cont, ant.cont) },
@@ -463,7 +466,7 @@ const linhasGeral = computed(() => {
     { key:'periodo', icon:'📅', label:'Período',
       ant: `${fdata(form.anterior.inicio)} até ${fdata(form.anterior.fim)}`,
       at:  `${fdata(form.atual.inicio)} até ${fdata(form.atual.fim)}`,
-      ger: `Desde ${fdata(form.geral.inicio)}`, diff: null },
+      ger: 'Anterior + Atual', diff: null },
   ]
 })
 
@@ -556,12 +559,19 @@ function editKey(id, campo, periodo) {
 }
 
 // Retorna o valor sobrescrito se existir, senão converte o valor original para número
+// Geral nunca é digitado — sempre é Anterior + Atual, calculado em linhasMetricas/linhasGeral.
 function editValue(id, campo, periodo, valorOriginal) {
   const k = editKey(id, campo, periodo)
   if (k in editOverrides) return editOverrides[k]
   // converte "1.234" ou "1.234,56" para número limpo
   const n = Number(String(valorOriginal).replace(/\./g, '').replace(',', '.'))
   return Number.isNaN(n) ? '' : n
+}
+
+// Valor numérico efetivo (override se existir, senão o valor original) — usado pra somar Ant+At em Geral
+function editNum(id, campo, periodo, valorOriginal) {
+  const v = editValue(id, campo, periodo, valorOriginal)
+  return v === '' ? 0 : Number(v)
 }
 
 function setEdit(id, campo, periodo, value) {
@@ -572,13 +582,13 @@ function setEdit(id, campo, periodo, value) {
 }
 
 // Recalcula percentuais nas campanhas individuais após edição
-// O geral é computed automaticamente via linhasGeral
+// Geral (ant+at) é computado automaticamente em linhasMetricas/linhasGeral — nunca aqui
 function recalcular() {
   if (!metricas.value) return
   const pct = (a, b) => b ? parseFloat((a / b * 100).toFixed(2)) : 0
 
   for (const c of (metricas.value.campanhas || [])) {
-    for (const per of ['ant', 'at', 'ger']) {
+    for (const per of ['ant', 'at']) {
       const get = (campo) => {
         const k = editKey(c.id, campo, per)
         return k in editOverrides ? editOverrides[k] : (c[per]?.[campo] ?? 0)
@@ -648,7 +658,6 @@ function diffBadge(atual, anterior, isPct = false) {
 function linhasMetricas(item, incluirAvancos = false) {
   const ant = item.ant || {}
   const at  = item.at  || {}
-  const ger = item.ger || {}
 
   // pct exibido: usa override se existir, senão usa o valor do backend
   const getPct = (id, campo, per, val) => {
@@ -658,26 +667,42 @@ function linhasMetricas(item, incluirAvancos = false) {
 
   const id = item.id ?? 'total'
 
+  // Geral = Anterior + Atual, sempre — nunca digitado, nunca vem de outra query.
+  const pctCalc  = (a, b) => b ? parseFloat((a / b * 100).toFixed(2)) : 0
+  const somaAntAt = (campo, valAnt, valAt) =>
+    editNum(id, campo, 'ant', valAnt) + editNum(id, campo, 'at', valAt)
+
+  const contGer = somaAntAt('contatos',  ant.contatos,  at.contatos)
+  const dispGer = somaAntAt('disparos',  ant.disparos,  at.disparos)
+  const abGer   = somaAntAt('aberturas', ant.aberturas, at.aberturas)
+  const respGer = somaAntAt('respostas', ant.respostas, at.respostas)
+
   const base = [
-    { key: 'contatos',  label: 'Contatos Atingidos', desc: 'Total de contatos alcançados',   icon: '🎯', editavel: true,  ant: fnum(ant.contatos),  at: fnum(at.contatos),  ger: fnum(ger.contatos),  diff: diffBadge(at.contatos, ant.contatos) },
-    { key: 'disparos',  label: 'Disparos',            desc: 'Total de disparos realizados',   icon: '➤',  editavel: true,  ant: fnum(ant.disparos),  at: fnum(at.disparos),  ger: fnum(ger.disparos),  diff: diffBadge(at.disparos, ant.disparos) },
-    { key: 'aberturas', label: 'Aberturas',            desc: 'Total de aberturas',             icon: '✉️', editavel: true,  ant: fnum(ant.aberturas), at: fnum(at.aberturas), ger: fnum(ger.aberturas), diff: diffBadge(at.aberturas, ant.aberturas) },
-    { key: 'abert_pct', label: 'Aberturas %',          desc: 'Calculado: Aberturas / Disparos',icon: '%',  editavel: false, ant: fpct(getPct(id,'abert_pct','ant',ant.abert_pct)), at: fpct(getPct(id,'abert_pct','at',at.abert_pct)), ger: fpct(getPct(id,'abert_pct','ger',ger.abert_pct)), diff: null },
-    { key: 'respostas', label: 'Respostas',            desc: 'Total de respostas recebidas',   icon: '↩',  editavel: true,  ant: fnum(ant.respostas), at: fnum(at.respostas), ger: fnum(ger.respostas), diff: diffBadge(at.respostas, ant.respostas) },
-    { key: 'resp_pct',  label: 'Respostas %',          desc: 'Calculado: Respostas / Aberturas',icon: '%', editavel: false, ant: fpct(getPct(id,'resp_pct','ant',ant.resp_pct)),  at: fpct(getPct(id,'resp_pct','at',at.resp_pct)),  ger: fpct(getPct(id,'resp_pct','ger',ger.resp_pct)),  diff: null },
+    { key: 'contatos',  label: 'Contatos Atingidos', desc: 'Total de contatos alcançados',   icon: '🎯', editavel: true,  ant: fnum(ant.contatos),  at: fnum(at.contatos),  ger: fnum(contGer),  diff: diffBadge(at.contatos, ant.contatos) },
+    { key: 'disparos',  label: 'Disparos',            desc: 'Total de disparos realizados',   icon: '➤',  editavel: true,  ant: fnum(ant.disparos),  at: fnum(at.disparos),  ger: fnum(dispGer),  diff: diffBadge(at.disparos, ant.disparos) },
+    { key: 'aberturas', label: 'Aberturas',            desc: 'Total de aberturas',             icon: '✉️', editavel: true,  ant: fnum(ant.aberturas), at: fnum(at.aberturas), ger: fnum(abGer),    diff: diffBadge(at.aberturas, ant.aberturas) },
+    { key: 'abert_pct', label: 'Aberturas %',          desc: 'Calculado: Aberturas / Disparos',icon: '%',  editavel: false, ant: fpct(getPct(id,'abert_pct','ant',ant.abert_pct)), at: fpct(getPct(id,'abert_pct','at',at.abert_pct)), ger: fpct(pctCalc(abGer, dispGer)), diff: null },
+    { key: 'respostas', label: 'Respostas',            desc: 'Total de respostas recebidas',   icon: '↩',  editavel: true,  ant: fnum(ant.respostas), at: fnum(at.respostas), ger: fnum(respGer),  diff: diffBadge(at.respostas, ant.respostas) },
+    { key: 'resp_pct',  label: 'Respostas %',          desc: 'Calculado: Respostas / Aberturas',icon: '%', editavel: false, ant: fpct(getPct(id,'resp_pct','ant',ant.resp_pct)),  at: fpct(getPct(id,'resp_pct','at',at.resp_pct)),  ger: fpct(pctCalc(respGer, abGer)), diff: null },
   ]
 
-  // Avanços — sempre inputs manuais, nunca preenchidos automaticamente pelo banco
+  // Avanços — inputs manuais em Anterior/Atual; Geral soma os dois, mostra '—' se nada foi digitado ainda
+  const avancoGer = (campo) => {
+    const kAnt = editKey(id, campo, 'ant')
+    const kAt  = editKey(id, campo, 'at')
+    if (!(kAnt in editOverrides) && !(kAt in editOverrides)) return '—'
+    return fnum(somaAntAt(campo, '—', '—'))
+  }
   base.push(
-    { key: 'encaminhamento', label: 'Encaminhamento', desc: 'Preencha manualmente', icon: '↗', editavel: true, ant: '—', at: '—', ger: '—', diff: null },
-    { key: 'apresentacao',   label: 'Apresentação',   desc: 'Preencha manualmente', icon: '▣', editavel: true, ant: '—', at: '—', ger: '—', diff: null },
-    { key: 'interessados',   label: 'Interessados',   desc: 'Preencha manualmente', icon: '☆', editavel: true, ant: '—', at: '—', ger: '—', diff: null },
+    { key: 'encaminhamento', label: 'Encaminhamento', desc: 'Preencha manualmente', icon: '↗', editavel: true, ant: '—', at: '—', ger: avancoGer('encaminhamento'), diff: null },
+    { key: 'apresentacao',   label: 'Apresentação',   desc: 'Preencha manualmente', icon: '▣', editavel: true, ant: '—', at: '—', ger: avancoGer('apresentacao'),   diff: null },
+    { key: 'interessados',   label: 'Interessados',   desc: 'Preencha manualmente', icon: '☆', editavel: true, ant: '—', at: '—', ger: avancoGer('interessados'),   diff: null },
   )
 
   base.push({ key: 'periodo', label: 'Período', desc: 'Período dos dados', icon: '📅', editavel: false,
     ant: `${fdata(form.anterior.inicio)} até ${fdata(form.anterior.fim)}`,
     at:  `${fdata(form.atual.inicio)} até ${fdata(form.atual.fim)}`,
-    ger: `Desde ${fdata(form.geral.inicio)}`, diff: null })
+    ger: 'Anterior + Atual', diff: null })
   return base
 }
 

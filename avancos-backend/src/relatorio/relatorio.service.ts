@@ -54,12 +54,12 @@ export class RelatorioService {
       campanhasSelecionadas,
     } = dto;
 
-    // 1. Avanços do banco
-    const [avAt, avAnt, avGer] = await Promise.all([
+    // 1. Avanços do banco — Geral = Anterior + Atual (nunca query separada)
+    const [avAt, avAnt] = await Promise.all([
       this.getAvancos(cliente, atualInicio, atualFim),
       this.getAvancos(cliente, anteriorInicio, anteriorFim),
-      this.getAvancosGeral(cliente),
     ]);
+    const avGer = this.somaAvancos(avAt, avAnt);
 
     // 2. Credenciais — usa as do formulário, senão busca do banco
     let resolvedId     = snovId;
@@ -72,21 +72,21 @@ export class RelatorioService {
       } catch {}
     }
 
-    // 3. Métricas Snov.io
+    // 3. Métricas Snov.io — Geral = Anterior + Atual (nunca query separada)
     let snovToken = '';
-    let statsAt = this.zeroStats(), statsAnt = this.zeroStats(), statsGer = this.zeroStats();
+    let statsAt = this.zeroStats(), statsAnt = this.zeroStats();
     try {
       snovToken = await this.getSnovToken(resolvedId, resolvedSecret);
       const cSel = campanhasSelecionadas || [];
-      [statsAt, statsAnt, statsGer] = await Promise.all([
-        this.getAnalyticsMulti(snovToken, atualInicio,              atualFim,    cSel),
-        this.getAnalyticsMulti(snovToken, anteriorInicio,           anteriorFim, cSel),
-        this.getAnalyticsMulti(snovToken, geralInicio || '2020-01-01', geralFim, cSel),
+      [statsAt, statsAnt] = await Promise.all([
+        this.getAnalyticsMulti(snovToken, atualInicio,    atualFim,    cSel),
+        this.getAnalyticsMulti(snovToken, anteriorInicio, anteriorFim, cSel),
       ]);
     } catch (e) {
       console.error('[RelatorioService] Erro Snov.io:', e.message);
       throw new BadRequestException(`Erro ao buscar dados do Snov.io: ${e.message}`);
     }
+    const statsGer = this.somaStats(statsAt, statsAnt);
 
     // 4. Formata valores
     const fmt = (n: number) => Number(n).toLocaleString('pt-BR');
@@ -175,14 +175,14 @@ export class RelatorioService {
     return this.rowsToAvancos(rows);
   }
 
-  private async getAvancosGeral(cliente: string) {
-    const rows: any[] = await this.dataSource.query(
-      `SELECT tipo, COUNT(*) as total FROM avancos
-       WHERE (cliente = ? OR cliente LIKE ?)
-       GROUP BY tipo`,
-      [cliente, `${cliente} - %`],
-    );
-    return this.rowsToAvancos(rows);
+  // Geral = Anterior + Atual — nunca busca período completo separado
+  private somaAvancos(a: any, b: any) {
+    return {
+      interessado:    a.interessado    + b.interessado,
+      apresentacao:   a.apresentacao   + b.apresentacao,
+      encaminhamento: a.encaminhamento + b.encaminhamento,
+      nutricao:       a.nutricao       + b.nutricao,
+    };
   }
 
   private rowsToAvancos(rows: any[]) {
@@ -211,11 +211,11 @@ export class RelatorioService {
 
     const resultados = await Promise.all(
       dto.campanhas.map(async (c) => {
-        const [at, ant, ger] = await Promise.all([
+        const [at, ant] = await Promise.all([
           this.getAnalytics(token, dto.atualInicio,    dto.atualFim,    c.id).catch(() => this.zeroStats()),
           this.getAnalytics(token, dto.anteriorInicio, dto.anteriorFim, c.id).catch(() => this.zeroStats()),
-          this.getAnalytics(token, dto.geralInicio,    dto.geralFim,    c.id).catch(() => this.zeroStats()),
         ]);
+        const ger = this.somaStats(at, ant); // Geral = Anterior + Atual
         return {
           id:   c.id,
           nome: c.nome,
@@ -336,6 +336,19 @@ export class RelatorioService {
 
   private zeroStats() {
     return { contacted: 0, sent: 0, opened: 0, replied: 0, interested: 0, maybe: 0, auto_replied: 0 };
+  }
+
+  // Geral = Anterior + Atual — nunca busca período completo separado
+  private somaStats(a: ReturnType<RelatorioService['zeroStats']>, b: ReturnType<RelatorioService['zeroStats']>) {
+    return {
+      contacted:    a.contacted    + b.contacted,
+      sent:         a.sent         + b.sent,
+      opened:       a.opened       + b.opened,
+      replied:      a.replied      + b.replied,
+      interested:   a.interested   + b.interested,
+      maybe:        a.maybe        + b.maybe,
+      auto_replied: a.auto_replied + b.auto_replied,
+    };
   }
 
   // ── Edição de slides ──────────────────────────────────────────────────────
@@ -538,11 +551,11 @@ export class RelatorioService {
       associados.add(slideAlvo);
 
       try {
-        const [cAt, cAnt, cGer] = await Promise.all([
+        const [cAt, cAnt] = await Promise.all([
           this.getAnalytics(token, periodos.atualInicio,    periodos.atualFim,    campanha.id).catch(() => this.zeroStats()),
           this.getAnalytics(token, periodos.anteriorInicio, periodos.anteriorFim, campanha.id).catch(() => this.zeroStats()),
-          this.getAnalytics(token, periodos.geralInicio,    periodos.geralFim,    campanha.id).catch(() => this.zeroStats()),
         ]);
+        const cGer = this.somaStats(cAt, cAnt); // Geral = Anterior + Atual
 
         const fmt = (n: number) => Number(n).toLocaleString('pt-BR');
         const pct = (p: number, t: number) => t ? `${(p / t * 100).toFixed(2).replace('.', ',')}%` : '0,00%';
