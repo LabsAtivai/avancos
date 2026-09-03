@@ -165,12 +165,15 @@ export class RelatorioService {
 
   // ── Banco de avanços ──────────────────────────────────────────────────────
 
+  // Mesmo padrão de match usado em avancos.service.ts (getPptxData) — o banco
+  // tem sub-marcas tanto no formato "Cliente - Segmento" quanto "Cliente [Segmento]",
+  // então precisa de LIKE '%cliente%' pra pegar as duas convenções.
   private async getAvancos(cliente: string, dataInicio: string, dataFim: string) {
     const rows: any[] = await this.dataSource.query(
       `SELECT tipo, COUNT(*) as total FROM avancos
-       WHERE (cliente = ? OR cliente LIKE ?) AND data_avanco BETWEEN ? AND ?
+       WHERE cliente LIKE ? AND data_avanco BETWEEN ? AND ?
        GROUP BY tipo`,
-      [cliente, `${cliente} - %`, dataInicio, dataFim],
+      [`%${cliente}%`, dataInicio, dataFim],
     );
     return this.rowsToAvancos(rows);
   }
@@ -633,19 +636,19 @@ export class RelatorioService {
     const [porSegmento, porCargo] = await Promise.all([
       this.dataSource.query(
         `SELECT segmento AS label, COUNT(*) AS valor FROM avancos
-         WHERE (cliente = ? OR cliente LIKE ?)
+         WHERE cliente LIKE ?
            AND segmento IS NOT NULL AND segmento != '' AND segmento != '-'
            AND data_avanco BETWEEN ? AND ?
          GROUP BY segmento ORDER BY valor DESC LIMIT 15`,
-        [cliente, `${cliente} - %`, geralInicio, geralFim],
+        [`%${cliente}%`, geralInicio, geralFim],
       ),
       this.dataSource.query(
         `SELECT cargo AS label, COUNT(*) AS valor FROM avancos
-         WHERE (cliente = ? OR cliente LIKE ?)
+         WHERE cliente LIKE ?
            AND cargo IS NOT NULL AND cargo != '' AND cargo != '-'
            AND data_avanco BETWEEN ? AND ?
          GROUP BY cargo ORDER BY valor DESC LIMIT 15`,
-        [cliente, `${cliente} - %`, geralInicio, geralFim],
+        [`%${cliente}%`, geralInicio, geralFim],
       ),
     ]);
 

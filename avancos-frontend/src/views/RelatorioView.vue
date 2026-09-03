@@ -199,30 +199,18 @@
             <div class="total-card">
               <div class="total-label">Contatos Atingidos ({{ periodoPrincipalLabel }})</div>
               <div class="total-val">{{ fnum(metricas.total[periodoPrincipal].contatos) }}</div>
-              <div v-if="periodosAtivos.includes('ant')" class="total-diff" :class="diff(metricas.total.at.contatos, metricas.total.ant.contatos).cls">
-                {{ diff(metricas.total.at.contatos, metricas.total.ant.contatos).txt }} vs anterior
-              </div>
             </div>
             <div class="total-card">
               <div class="total-label">Disparos ({{ periodoPrincipalLabel }})</div>
               <div class="total-val">{{ fnum(metricas.total[periodoPrincipal].disparos) }}</div>
-              <div v-if="periodosAtivos.includes('ant')" class="total-diff" :class="diff(metricas.total.at.disparos, metricas.total.ant.disparos).cls">
-                {{ diff(metricas.total.at.disparos, metricas.total.ant.disparos).txt }} vs anterior
-              </div>
             </div>
             <div class="total-card">
               <div class="total-label">Respostas ({{ periodoPrincipalLabel }})</div>
               <div class="total-val accent">{{ fnum(metricas.total[periodoPrincipal].respostas) }}</div>
-              <div v-if="periodosAtivos.includes('ant')" class="total-diff" :class="diff(metricas.total.at.respostas, metricas.total.ant.respostas).cls">
-                {{ diff(metricas.total.at.respostas, metricas.total.ant.respostas).txt }} vs anterior
-              </div>
             </div>
             <div class="total-card">
               <div class="total-label">Taxa Resposta ({{ periodoPrincipalLabel }})</div>
               <div class="total-val accent">{{ metricas.total[periodoPrincipal].resp_pct }}%</div>
-              <div v-if="periodosAtivos.includes('ant')" class="total-diff" :class="diff(metricas.total.at.resp_pct, metricas.total.ant.resp_pct).cls">
-                {{ diff(metricas.total.at.resp_pct, metricas.total.ant.resp_pct).txt }} vs anterior
-              </div>
             </div>
           </div>
 
@@ -252,10 +240,7 @@
                       <div><strong>{{ r.label }}</strong></div>
                     </td>
                     <td v-if="periodosAtivos.includes('ant')" class="metric-value anterior" @click="copiar(r.ant)">{{ r.ant }}</td>
-                    <td v-if="periodosAtivos.includes('at')" class="metric-value atual" @click="copiar(r.at)">
-                      {{ r.at }}
-                      <span v-if="r.diff" class="diff-pill" :class="r.diff.cls">{{ r.diff.txt }}</span>
-                    </td>
+                    <td v-if="periodosAtivos.includes('at')" class="metric-value atual" @click="copiar(r.at)">{{ r.at }}</td>
                     <td v-if="periodosAtivos.includes('ger')" class="metric-value geral" @click="copiar(r.ger)">{{ r.ger }}</td>
                   </tr>
                 </tbody>
@@ -297,10 +282,7 @@
                         :value="editValue(c.id, r.key, 'at', r.at)"
                         @input="setEdit(c.id, r.key, 'at', $event.target.value); recalcular()"
                         @click.stop type="number" min="0" class="edit-input" placeholder="0" />
-                      <template v-else>
-                        <span @click="copiar(r.at)">{{ r.at }}</span>
-                        <span v-if="r.diff" class="diff-pill" :class="r.diff.cls">{{ r.diff.txt }}</span>
-                      </template>
+                      <span v-else @click="copiar(r.at)">{{ r.at }}</span>
                     </td>
                     <td v-if="periodosAtivos.includes('ger')" class="metric-value geral">
                       <input v-if="r.editavel"
@@ -472,19 +454,19 @@ const linhasGeral = computed(() => {
   ger.resp_pct  = pct(ger.resp,  ger.abert)
 
   return [
-    { key:'contatos',       icon:'🎯', label:'Contatos Atingidos', ant: fnum(ant.cont),      at: fnum(at.cont),      ger: fnum(ger.cont),      diff: diffBadge(at.cont, ant.cont) },
-    { key:'disparos',       icon:'➤',  label:'Disparos',           ant: fnum(ant.disp),      at: fnum(at.disp),      ger: fnum(ger.disp),      diff: diffBadge(at.disp, ant.disp) },
-    { key:'aberturas',      icon:'✉️', label:'Aberturas',           ant: fnum(ant.abert),     at: fnum(at.abert),     ger: fnum(ger.abert),     diff: diffBadge(at.abert, ant.abert) },
-    { key:'abert_pct',      icon:'%',  label:'Aberturas %',         ant: fpct(ant.abert_pct), at: fpct(at.abert_pct), ger: fpct(ger.abert_pct), diff: null },
-    { key:'respostas',      icon:'↩',  label:'Respostas',           ant: fnum(ant.resp),      at: fnum(at.resp),      ger: fnum(ger.resp),      diff: diffBadge(at.resp, ant.resp) },
-    { key:'resp_pct',       icon:'%',  label:'Respostas %',         ant: fpct(ant.resp_pct),  at: fpct(at.resp_pct),  ger: fpct(ger.resp_pct),  diff: null },
-    { key:'encaminhamento', icon:'↗',  label:'Encaminhamento',      ant: fnum(ant.ench),      at: fnum(at.ench),      ger: fnum(ger.ench),      diff: diffBadge(at.ench, ant.ench) },
-    { key:'apresentacao',   icon:'▣',  label:'Apresentação',        ant: fnum(ant.apres),     at: fnum(at.apres),     ger: fnum(ger.apres),     diff: diffBadge(at.apres, ant.apres) },
-    { key:'interessados',   icon:'☆',  label:'Interessados',        ant: fnum(ant.inter),     at: fnum(at.inter),     ger: fnum(ger.inter),     diff: diffBadge(at.inter, ant.inter) },
+    { key:'contatos',       icon:'🎯', label:'Contatos Atingidos', ant: fnum(ant.cont),      at: fnum(at.cont),      ger: fnum(ger.cont) },
+    { key:'disparos',       icon:'➤',  label:'Disparos',           ant: fnum(ant.disp),      at: fnum(at.disp),      ger: fnum(ger.disp) },
+    { key:'aberturas',      icon:'✉️', label:'Aberturas',           ant: fnum(ant.abert),     at: fnum(at.abert),     ger: fnum(ger.abert) },
+    { key:'abert_pct',      icon:'%',  label:'Aberturas %',         ant: fpct(ant.abert_pct), at: fpct(at.abert_pct), ger: fpct(ger.abert_pct) },
+    { key:'respostas',      icon:'↩',  label:'Respostas',           ant: fnum(ant.resp),      at: fnum(at.resp),      ger: fnum(ger.resp) },
+    { key:'resp_pct',       icon:'%',  label:'Respostas %',         ant: fpct(ant.resp_pct),  at: fpct(at.resp_pct),  ger: fpct(ger.resp_pct) },
+    { key:'encaminhamento', icon:'↗',  label:'Encaminhamento',      ant: fnum(ant.ench),      at: fnum(at.ench),      ger: fnum(ger.ench) },
+    { key:'apresentacao',   icon:'▣',  label:'Apresentação',        ant: fnum(ant.apres),     at: fnum(at.apres),     ger: fnum(ger.apres) },
+    { key:'interessados',   icon:'☆',  label:'Interessados',        ant: fnum(ant.inter),     at: fnum(at.inter),     ger: fnum(ger.inter) },
     { key:'periodo', icon:'📅', label:'Período',
       ant: `${fdata(form.anterior.inicio)} até ${fdata(form.anterior.fim)}`,
       at:  `${fdata(form.atual.inicio)} até ${fdata(form.atual.fim)}`,
-      ger: 'Anterior + Atual', diff: null },
+      ger: 'Anterior + Atual' },
   ]
 })
 
@@ -637,14 +619,6 @@ function updateManualMetric(campanhaId, metrica, periodo, value) {
   else manualMetricas[key] = Number(v)
 }
 
-function diff(atual, anterior) {
-  if (!anterior || anterior === 0) return { txt: '—', cls: '' }
-  const pct = Number(((atual - anterior) / anterior * 100).toFixed(1))
-  if (pct > 0)  return { txt: `▲ ${pct}%`, cls: 'diff-up' }
-  if (pct < 0)  return { txt: `▼ ${Math.abs(pct)}%`, cls: 'diff-down' }
-  return { txt: '= 0%', cls: '' }
-}
-
 function fnum(n) {
   if (n === undefined || n === null) return '—'
   return Number(n).toLocaleString('pt-BR')
@@ -660,17 +634,6 @@ function fpct(v) {
   const n = Number(String(v).replace(',', '.'))
   if (Number.isNaN(n)) return String(v).includes('%') ? String(v) : `${v}%`
   return `${n.toFixed(2).replace('.', ',')}%`
-}
-
-function diffBadge(atual, anterior, isPct = false) {
-  const a = Number(String(atual ?? 0).replace(',', '.'))
-  const b = Number(String(anterior ?? 0).replace(',', '.'))
-  if (!b || Number.isNaN(a) || Number.isNaN(b)) return null
-  const valor = isPct ? (a - b) : ((a - b) / b * 100)
-  const txt = `${valor > 0 ? '+' : ''}${valor.toFixed(2).replace('.', ',')}%`
-  if (valor > 0) return { txt, cls: 'up' }
-  if (valor < 0) return { txt, cls: 'down' }
-  return { txt: '0,00%', cls: 'neutral' }
 }
 
 function linhasMetricas(item, incluirAvancos = false) {
@@ -701,12 +664,12 @@ function linhasMetricas(item, incluirAvancos = false) {
   const respGer = gerEff('respostas', ant.respostas, at.respostas)
 
   const base = [
-    { key: 'contatos',  label: 'Contatos Atingidos', desc: 'Total de contatos alcançados',   icon: '🎯', editavel: true,  ant: fnum(ant.contatos),  at: fnum(at.contatos),  ger: fnum(contGer),  diff: diffBadge(at.contatos, ant.contatos) },
-    { key: 'disparos',  label: 'Disparos',            desc: 'Total de disparos realizados',   icon: '➤',  editavel: true,  ant: fnum(ant.disparos),  at: fnum(at.disparos),  ger: fnum(dispGer),  diff: diffBadge(at.disparos, ant.disparos) },
-    { key: 'aberturas', label: 'Aberturas',            desc: 'Total de aberturas',             icon: '✉️', editavel: true,  ant: fnum(ant.aberturas), at: fnum(at.aberturas), ger: fnum(abGer),    diff: diffBadge(at.aberturas, ant.aberturas) },
-    { key: 'abert_pct', label: 'Aberturas %',          desc: 'Calculado: Aberturas / Disparos',icon: '%',  editavel: false, ant: fpct(getPct(id,'abert_pct','ant',ant.abert_pct)), at: fpct(getPct(id,'abert_pct','at',at.abert_pct)), ger: fpct(pctCalc(abGer, dispGer)), diff: null },
-    { key: 'respostas', label: 'Respostas',            desc: 'Total de respostas recebidas',   icon: '↩',  editavel: true,  ant: fnum(ant.respostas), at: fnum(at.respostas), ger: fnum(respGer),  diff: diffBadge(at.respostas, ant.respostas) },
-    { key: 'resp_pct',  label: 'Respostas %',          desc: 'Calculado: Respostas / Aberturas',icon: '%', editavel: false, ant: fpct(getPct(id,'resp_pct','ant',ant.resp_pct)),  at: fpct(getPct(id,'resp_pct','at',at.resp_pct)),  ger: fpct(pctCalc(respGer, abGer)), diff: null },
+    { key: 'contatos',  label: 'Contatos Atingidos', desc: 'Total de contatos alcançados',   icon: '🎯', editavel: true,  ant: fnum(ant.contatos),  at: fnum(at.contatos),  ger: fnum(contGer) },
+    { key: 'disparos',  label: 'Disparos',            desc: 'Total de disparos realizados',   icon: '➤',  editavel: true,  ant: fnum(ant.disparos),  at: fnum(at.disparos),  ger: fnum(dispGer) },
+    { key: 'aberturas', label: 'Aberturas',            desc: 'Total de aberturas',             icon: '✉️', editavel: true,  ant: fnum(ant.aberturas), at: fnum(at.aberturas), ger: fnum(abGer) },
+    { key: 'abert_pct', label: 'Aberturas %',          desc: 'Calculado: Aberturas / Disparos',icon: '%',  editavel: false, ant: fpct(getPct(id,'abert_pct','ant',ant.abert_pct)), at: fpct(getPct(id,'abert_pct','at',at.abert_pct)), ger: fpct(pctCalc(abGer, dispGer)) },
+    { key: 'respostas', label: 'Respostas',            desc: 'Total de respostas recebidas',   icon: '↩',  editavel: true,  ant: fnum(ant.respostas), at: fnum(at.respostas), ger: fnum(respGer) },
+    { key: 'resp_pct',  label: 'Respostas %',          desc: 'Calculado: Respostas / Aberturas',icon: '%', editavel: false, ant: fpct(getPct(id,'resp_pct','ant',ant.resp_pct)),  at: fpct(getPct(id,'resp_pct','at',at.resp_pct)),  ger: fpct(pctCalc(respGer, abGer)) },
   ]
 
   // Avanços — inputs manuais em Anterior/Atual/Geral; Geral soma os dois por padrão,
@@ -720,15 +683,15 @@ function linhasMetricas(item, incluirAvancos = false) {
     return fnum(somaAntAt(campo, '—', '—'))
   }
   base.push(
-    { key: 'encaminhamento', label: 'Encaminhamento', desc: 'Preencha manualmente', icon: '↗', editavel: true, ant: '—', at: '—', ger: avancoGer('encaminhamento'), diff: null },
-    { key: 'apresentacao',   label: 'Apresentação',   desc: 'Preencha manualmente', icon: '▣', editavel: true, ant: '—', at: '—', ger: avancoGer('apresentacao'),   diff: null },
-    { key: 'interessados',   label: 'Interessados',   desc: 'Preencha manualmente', icon: '☆', editavel: true, ant: '—', at: '—', ger: avancoGer('interessados'),   diff: null },
+    { key: 'encaminhamento', label: 'Encaminhamento', desc: 'Preencha manualmente', icon: '↗', editavel: true, ant: '—', at: '—', ger: avancoGer('encaminhamento') },
+    { key: 'apresentacao',   label: 'Apresentação',   desc: 'Preencha manualmente', icon: '▣', editavel: true, ant: '—', at: '—', ger: avancoGer('apresentacao') },
+    { key: 'interessados',   label: 'Interessados',   desc: 'Preencha manualmente', icon: '☆', editavel: true, ant: '—', at: '—', ger: avancoGer('interessados') },
   )
 
   base.push({ key: 'periodo', label: 'Período', desc: 'Período dos dados', icon: '📅', editavel: false,
     ant: `${fdata(form.anterior.inicio)} até ${fdata(form.anterior.fim)}`,
     at:  `${fdata(form.atual.inicio)} até ${fdata(form.atual.fim)}`,
-    ger: 'Anterior + Atual', diff: null })
+    ger: 'Anterior + Atual' })
   return base
 }
 
@@ -770,9 +733,6 @@ function linhasMetricas(item, incluirAvancos = false) {
 .total-label { font-size: 12px; color: var(--muted); font-weight: 500; }
 .total-val   { font-size: 26px; font-weight: 700; color: var(--text); }
 .total-val.accent { color: var(--brand); }
-.total-diff  { font-size: 12px; color: var(--muted); }
-.diff-up   { color: #16a34a; }
-.diff-down { color: #dc2626; }
 
 /* Avanços mini */
 .avancos-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -974,31 +934,6 @@ function linhasMetricas(item, incluirAvancos = false) {
 .metric-value.atual { color: var(--success); }
 .metric-value.geral { color: #7c3aed; }
 .metric-value:hover { background: var(--brand-light) !important; }
-.diff-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 8px;
-  margin-left: 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1;
-  white-space: nowrap;
-  vertical-align: middle;
-}
-.diff-pill.up {
-  color: #166534;
-  background: #dcfce7;
-}
-.diff-pill.down {
-  color: #b91c1c;
-  background: #fee2e2;
-}
-.diff-pill.neutral {
-  color: #475569;
-  background: var(--bg);
-}
 
 .edit-input {
   width: 72px; padding: 3px 6px; border: 1px solid var(--border);
