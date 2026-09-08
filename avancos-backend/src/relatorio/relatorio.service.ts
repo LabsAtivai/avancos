@@ -72,21 +72,22 @@ export class RelatorioService {
       } catch {}
     }
 
-    // 3. Métricas Snov.io — Geral = Anterior + Atual (nunca query separada)
+    // 3. Métricas Snov.io — Geral busca o período próprio (geralInicio/geralFim),
+    // não é mais soma de Anterior+Atual, pra refletir o filtro Geral de verdade.
     let snovToken = '';
-    let statsAt = this.zeroStats(), statsAnt = this.zeroStats();
+    let statsAt = this.zeroStats(), statsAnt = this.zeroStats(), statsGer = this.zeroStats();
     try {
       snovToken = await this.getSnovToken(resolvedId, resolvedSecret);
       const cSel = campanhasSelecionadas || [];
-      [statsAt, statsAnt] = await Promise.all([
-        this.getAnalyticsMulti(snovToken, atualInicio,    atualFim,    cSel),
-        this.getAnalyticsMulti(snovToken, anteriorInicio, anteriorFim, cSel),
+      [statsAt, statsAnt, statsGer] = await Promise.all([
+        this.getAnalyticsMulti(snovToken, atualInicio,             atualFim,    cSel),
+        this.getAnalyticsMulti(snovToken, anteriorInicio,          anteriorFim, cSel),
+        this.getAnalyticsMulti(snovToken, geralInicio || '2020-01-01', geralFim, cSel),
       ]);
     } catch (e) {
       console.error('[RelatorioService] Erro Snov.io:', e.message);
       throw new BadRequestException(`Erro ao buscar dados do Snov.io: ${e.message}`);
     }
-    const statsGer = this.somaStats(statsAt, statsAnt);
 
     // 4. Formata valores
     const fmt = (n: number) => Number(n).toLocaleString('pt-BR');
@@ -127,7 +128,7 @@ export class RelatorioService {
       [CELLS.interest.ger]:  String(avGer.interessado),
       [CELLS.periodo.ant]:   per(anteriorInicio, anteriorFim),
       [CELLS.periodo.at]:    per(atualInicio,    atualFim),
-      [CELLS.periodo.ger]:   `Desde ${(geralInicio || '2020-01-01').split('-').reverse().join('/')}`,
+      [CELLS.periodo.ger]:   per(geralInicio || '2020-01-01', geralFim),
     };
 
     // 5. Manipula PPTX
@@ -214,11 +215,11 @@ export class RelatorioService {
 
     const resultados = await Promise.all(
       dto.campanhas.map(async (c) => {
-        const [at, ant] = await Promise.all([
+        const [at, ant, ger] = await Promise.all([
           this.getAnalytics(token, dto.atualInicio,    dto.atualFim,    c.id).catch(() => this.zeroStats()),
           this.getAnalytics(token, dto.anteriorInicio, dto.anteriorFim, c.id).catch(() => this.zeroStats()),
+          this.getAnalytics(token, dto.geralInicio,    dto.geralFim,    c.id).catch(() => this.zeroStats()),
         ]);
-        const ger = this.somaStats(at, ant); // Geral = Anterior + Atual
         return {
           id:   c.id,
           nome: c.nome,
@@ -339,19 +340,6 @@ export class RelatorioService {
 
   private zeroStats() {
     return { contacted: 0, sent: 0, opened: 0, replied: 0, interested: 0, maybe: 0, auto_replied: 0 };
-  }
-
-  // Geral = Anterior + Atual — nunca busca período completo separado
-  private somaStats(a: ReturnType<RelatorioService['zeroStats']>, b: ReturnType<RelatorioService['zeroStats']>) {
-    return {
-      contacted:    a.contacted    + b.contacted,
-      sent:         a.sent         + b.sent,
-      opened:       a.opened       + b.opened,
-      replied:      a.replied      + b.replied,
-      interested:   a.interested   + b.interested,
-      maybe:        a.maybe        + b.maybe,
-      auto_replied: a.auto_replied + b.auto_replied,
-    };
   }
 
   // ── Edição de slides ──────────────────────────────────────────────────────
@@ -554,11 +542,11 @@ export class RelatorioService {
       associados.add(slideAlvo);
 
       try {
-        const [cAt, cAnt] = await Promise.all([
+        const [cAt, cAnt, cGer] = await Promise.all([
           this.getAnalytics(token, periodos.atualInicio,    periodos.atualFim,    campanha.id).catch(() => this.zeroStats()),
           this.getAnalytics(token, periodos.anteriorInicio, periodos.anteriorFim, campanha.id).catch(() => this.zeroStats()),
+          this.getAnalytics(token, periodos.geralInicio,    periodos.geralFim,    campanha.id).catch(() => this.zeroStats()),
         ]);
-        const cGer = this.somaStats(cAt, cAnt); // Geral = Anterior + Atual
 
         const fmt = (n: number) => Number(n).toLocaleString('pt-BR');
         const pct = (p: number, t: number) => t ? `${(p / t * 100).toFixed(2).replace('.', ',')}%` : '0,00%';
@@ -579,7 +567,7 @@ export class RelatorioService {
           [CELLS.interest.ant]:  String(periodos.avAnt.interessado), [CELLS.interest.at]: String(periodos.avAt.interessado), [CELLS.interest.ger]: String(periodos.avGer.interessado),
           [CELLS.periodo.ant]:   per(periodos.anteriorInicio, periodos.anteriorFim),
           [CELLS.periodo.at]:    per(periodos.atualInicio,    periodos.atualFim),
-          [CELLS.periodo.ger]:   `Desde ${periodos.geralInicio.split('-').reverse().join('/')}`,
+          [CELLS.periodo.ger]:   per(periodos.geralInicio,    periodos.geralFim),
         };
 
         await this.editSlideTable(zip, slideAlvo, vals);

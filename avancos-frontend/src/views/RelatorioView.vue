@@ -230,7 +230,7 @@
                     <th class="col-metrica">Métricas</th>
                     <th v-if="periodosAtivos.includes('ant')" class="period-col anterior" :style="{ width: periodoColWidth }">Anterior<br><span>{{ fdata(form.anterior.inicio) }} até {{ fdata(form.anterior.fim) }}</span></th>
                     <th v-if="periodosAtivos.includes('at')" class="period-col atual" :style="{ width: periodoColWidth }">Atual<br><span>{{ fdata(form.atual.inicio) }} até {{ fdata(form.atual.fim) }}</span></th>
-                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>Anterior + Atual</span></th>
+                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>{{ fdata(form.geral.inicio) }} até {{ fdata(form.geral.fim) }}</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -261,7 +261,7 @@
                     <th class="col-metrica">Métricas</th>
                     <th v-if="periodosAtivos.includes('ant')" class="period-col anterior" :style="{ width: periodoColWidth }">Anterior<br><span>{{ fdata(form.anterior.inicio) }} até {{ fdata(form.anterior.fim) }}</span></th>
                     <th v-if="periodosAtivos.includes('at')" class="period-col atual" :style="{ width: periodoColWidth }">Atual<br><span>{{ fdata(form.atual.inicio) }} até {{ fdata(form.atual.fim) }}</span></th>
-                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>Anterior + Atual</span></th>
+                    <th v-if="periodosAtivos.includes('ger')" class="period-col geral" :style="{ width: periodoColWidth }">Geral<br><span>{{ fdata(form.geral.inicio) }} até {{ fdata(form.geral.fim) }}</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -428,12 +428,14 @@ const linhasGeral = computed(() => {
 
   const ant = row('ant')
   const at  = row('at')
-  // Geral = soma do valor efetivo de cada campanha (override de Geral se digitado
-  // diretamente nela, senão Anterior+Atual daquela campanha) — respeita overrides individuais.
+  // Geral: métricas do Snov.io (contatos/disparos/aberturas/respostas) vêm da query
+  // real do backend no período do filtro Geral (c.ger); avanços (sem fonte própria de
+  // Geral) continuam somando Anterior+Atual. Overrides sempre têm prioridade.
   const somaGer = (campo) => {
     return campanhas.reduce((acc, c) => {
       const kGer = editKey(c.id, campo, 'ger')
       if (kGer in editOverrides) return acc + Number(editOverrides[kGer] || 0)
+      if (c.ger && campo in c.ger) return acc + Number(c.ger[campo] || 0)
       const kAnt = editKey(c.id, campo, 'ant')
       const kAt  = editKey(c.id, campo, 'at')
       const antVal = kAnt in editOverrides ? editOverrides[kAnt] : (c.ant?.[campo] ?? 0)
@@ -466,7 +468,7 @@ const linhasGeral = computed(() => {
     { key:'periodo', icon:'📅', label:'Período',
       ant: `${fdata(form.anterior.inicio)} até ${fdata(form.anterior.fim)}`,
       at:  `${fdata(form.atual.inicio)} até ${fdata(form.atual.fim)}`,
-      ger: 'Anterior + Atual' },
+      ger: `${fdata(form.geral.inicio)} até ${fdata(form.geral.fim)}` },
   ]
 })
 
@@ -648,14 +650,17 @@ function linhasMetricas(item, incluirAvancos = false) {
 
   const id = item.id ?? 'total'
 
-  // Geral = Anterior + Atual por padrão, mas pode ser sobrescrito manualmente.
+  // Geral: métricas do Snov.io vêm da query real do backend no período do filtro Geral
+  // (item.ger), não são mais soma de Anterior+Atual — mas aceitam override manual.
   const pctCalc  = (a, b) => b ? parseFloat((a / b * 100).toFixed(2)) : 0
   const somaAntAt = (campo, valAnt, valAt) =>
     editNum(id, campo, 'ant', valAnt) + editNum(id, campo, 'at', valAt)
-  // Valor efetivo de Geral: override digitado direto nele, senão soma de Anterior+Atual
+  // Valor efetivo de Geral: override digitado direto nele, senão o valor real do backend
+  const ger = item.ger || {}
   const gerEff = (campo, valAnt, valAt) => {
     const k = editKey(id, campo, 'ger')
-    return k in editOverrides ? Number(editOverrides[k]) : somaAntAt(campo, valAnt, valAt)
+    if (k in editOverrides) return Number(editOverrides[k])
+    return campo in ger ? Number(ger[campo] || 0) : somaAntAt(campo, valAnt, valAt)
   }
 
   const contGer = gerEff('contatos',  ant.contatos,  at.contatos)
@@ -691,7 +696,7 @@ function linhasMetricas(item, incluirAvancos = false) {
   base.push({ key: 'periodo', label: 'Período', desc: 'Período dos dados', icon: '📅', editavel: false,
     ant: `${fdata(form.anterior.inicio)} até ${fdata(form.anterior.fim)}`,
     at:  `${fdata(form.atual.inicio)} até ${fdata(form.atual.fim)}`,
-    ger: 'Anterior + Atual' })
+    ger: `${fdata(form.geral.inicio)} até ${fdata(form.geral.fim)}` })
   return base
 }
 
