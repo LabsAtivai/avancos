@@ -5,6 +5,7 @@ import { AvancosModule } from './avancos/avancos.module';
 import { RelatorioModule } from './relatorio/relatorio.module';
 import { CredenciaisModule } from './credenciais/credenciais.module';
 import { ImportModule } from './import/import.module';
+import { PainelModule } from './integracoes/painel/painel.module';
 import { Avanco } from './avancos/entities/avanco.entity';
 import { CsvMapeamento } from './import/entities/csv-mapeamento.entity';
 import { Credencial } from './credenciais/credencial.entity';
@@ -29,6 +30,7 @@ import { Credencial } from './credenciais/credencial.entity';
     RelatorioModule,
     CredenciaisModule,
     ImportModule,
+    PainelModule,
   ],
 })
 export class AppModule {}

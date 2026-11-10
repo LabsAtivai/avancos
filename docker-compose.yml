@@ -4,8 +4,7 @@ services:
     build: ./avancos-backend
     container_name: avancos-backend
     restart: unless-stopped
-    ports:
-      - "3098:3098"
+    # Sem "ports": o backend não fica exposto no host; acesso só pela rede ativaai.
     environment:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-3306}
@@ -13,6 +12,11 @@ services:
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME:-avancos_comerciais}
       PORT: 3098
+      # Integração do Painel de Campanhas
+      PAINEL_API_KEY: ${PAINEL_API_KEY}
+      PAINEL_API_KEY_HEADER: ${PAINEL_API_KEY_HEADER:-x-api-key}
+      PAINEL_RATE_LIMIT_POR_MIN: ${PAINEL_RATE_LIMIT_POR_MIN:-120}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
     networks:
       - ativaai
 

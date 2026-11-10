@@ -55,6 +55,20 @@ docker compose up -d --build
 | DELETE | /api/import/mapeamentos/:nome | Remove mapeamento salvo |
 | GET | /api/import/campos | Lista campos disponíveis no banco |
 
+### Integração do Painel de Campanhas (somente leitura)
+Autenticação exclusiva de serviço: header `X-API-Key: <chave>` (nome configurável por `PAINEL_API_KEY_HEADER`). A chave vem de `PAINEL_API_KEY`; sem ela a integração responde `503`. Chave nunca vai em query string. Rate limit por IP: `PAINEL_RATE_LIMIT_POR_MIN` (padrão 120) → `429` com `Retry-After`.
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | /api/integracoes/painel/v1/resumo | `dataInicio`, `dataFim` (YYYY-MM-DD, inclusivo, máx. 366 dias), `cliente` repetível (exato), `cursor` opcional. Retorna `dias[]` com `{cliente, data, total, porTipo}` |
+| GET | /api/integracoes/painel/v1/status | `dias` (1–30, padrão 3), `excluirHoje` (padrão true, fuso America/Sao_Paulo). Conta só `Interessado`. Retorna `registros[]` com `{cliente, interessados, status}`; `status` = `verde` (≥2) / `amarelo` (1) / `vermelho` (0) / `sem_vinculo` |
+| GET | /api/integracoes/painel/v1/clientes | Lista somente `{cliente, snovEmail}` ativos para mapear contas sem transferir segredos |
+| GET | /api/integracoes/painel/v1/health | `{status, versao, geradoEm}`; `503` sem detalhes se o banco cair |
+
+Clientes "vinculados" são os de `credenciais_clientes` (somente nome e e-mail Snov ativos são lidos). Falha de consulta responde `503`, nunca vermelho/zero.
+
+CORS: `CORS_ORIGINS` (lista separada por vírgula). Sem a variável, nenhum cabeçalho CORS é emitido.
+
 ## Fluxo de import de CSV
 
 ### Passo 1 — Analisar
