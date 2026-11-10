@@ -91,24 +91,11 @@
           </div>
         </div>
 
-        <!-- Credenciais -->
-        <div class="card card-body">
-          <div class="form-label" style="font-weight:600;margin-bottom:12px">Credenciais Snov.io</div>
-          <div class="form-group" style="margin-bottom:10px">
-            <label class="form-label">Client ID *</label>
-            <input v-model="snovId" class="form-control" placeholder="seu_client_id" />
-          </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Client Secret *</label>
-            <input v-model="snovSecret" type="password" class="form-control" placeholder="••••••••" />
-          </div>
-        </div>
-
         <!-- Campanhas -->
         <div class="card card-body">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
             <div class="form-label" style="font-weight:600;margin:0">Fontes (Snov.io)</div>
-            <button class="btn btn-ghost btn-sm" :disabled="!snovId || !snovSecret || carregandoCampanhas"
+            <button class="btn btn-ghost btn-sm" :disabled="!form.cliente || carregandoCampanhas"
                     @click="buscarCampanhas">
               {{ carregandoCampanhas ? '...' : '↻ Carregar' }}
             </button>
@@ -117,7 +104,7 @@
           <div v-if="erroCampanhas" class="alert alert-danger" style="margin-bottom:8px;font-size:12px">{{ erroCampanhas }}</div>
 
           <div v-if="!campanhas.length" style="font-size:12px;color:var(--muted)">
-            {{ snovId && snovSecret ? 'Clique em Carregar para buscar as campanhas.' : 'Preencha as credenciais primeiro.' }}
+            {{ form.cliente ? 'Clique em Carregar para buscar as campanhas.' : 'Selecione um cliente primeiro.' }}
           </div>
 
           <div v-else style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;max-height:280px;overflow-y:auto">
@@ -306,7 +293,6 @@
 import { ref, reactive, computed, watch } from 'vue'
 import api, { avancosApi } from '@/services/api'
 import MultiClienteSelect from '@/components/MultiClienteSelect.vue'
-import { useCredenciais } from '@/composables/useCredenciais'
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 
@@ -316,11 +302,8 @@ function onClientesChange(vals) {
   form.cliente = vals[0] || ''
   if (form.cliente) {
     buscarAvancos()
-    carregarCredenciais(form.cliente)
   }
 }
-
-const { snovId, snovSecret, encontrado: credEncontrado, carregarCredenciais } = useCredenciais()
 
 const form = reactive({
   cliente: '',
@@ -474,7 +457,7 @@ const linhasGeral = computed(() => {
 
 const formValido = computed(() =>
   form.cliente && form.atual.inicio && form.atual.fim &&
-  snovId.value && snovSecret.value && campanhasSelecionadasCount.value > 0
+  campanhasSelecionadasCount.value > 0
 )
 
 // ── Funções ───────────────────────────────────────────────────────────────────
@@ -509,12 +492,12 @@ watch([() => form.atual.inicio, () => form.atual.fim], () => {
 })
 
 async function buscarCampanhas() {
-  if (!snovId.value || !snovSecret.value) return
+  if (!form.cliente) return
   carregandoCampanhas.value = true
   erroCampanhas.value = ''
   try {
     const r = await api.get('/relatorio/campanhas', {
-      params: { snovId: snovId.value, snovSecret: snovSecret.value }
+      params: { cliente: form.cliente.trim() }
     })
     campanhas.value = r.data.campanhas || []
     campanhas.value.forEach(c => { if (c.ativa) campanhaSelecionada[c.id] = true })
@@ -531,8 +514,7 @@ async function consultar() {
   Object.keys(editOverrides).forEach(k => delete editOverrides[k])
   try {
     const r = await api.post('/relatorio/metricas', {
-      snovId:         snovId.value,
-      snovSecret:     snovSecret.value,
+      cliente:        form.cliente.trim(),
       atualInicio:    form.atual.inicio,
       atualFim:       form.atual.fim,
       anteriorInicio: form.anterior.inicio || form.atual.inicio,

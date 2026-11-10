@@ -24,6 +24,18 @@ export class CredenciaisService {
     return c;
   }
 
+  /**
+   * Match exato do nome do cliente, usado pelo relatório Snov.io.
+   * Sem match aproximado: evita usar a conta de outro cliente nas métricas.
+   */
+  async findClienteExato(cliente: string) {
+    const c = cliente
+      ? await this.repo.findOne({ where: { cliente, ativo: true } })
+      : null;
+    if (!c) throw new NotFoundException(`Nenhuma credencial Snov.io ativa para o cliente "${cliente}"`);
+    return c;
+  }
+
   async findByCliente(cliente: string) {
     if (!cliente) throw new NotFoundException('Cliente não informado');
 

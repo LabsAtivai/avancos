@@ -1,24 +1,46 @@
 import {
   Controller, Get, Post, Res, Query,
   UploadedFile, UseInterceptors, Body,
-  BadRequestException, InternalServerErrorException,
+  BadRequestException, InternalServerErrorException, NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { RelatorioService } from './relatorio.service';
+import { CredenciaisService } from '../credenciais/credenciais.service';
+import { SnovAmService } from './snov-am.service';
 
 @Controller('relatorio')
 export class RelatorioController {
-  constructor(private readonly service: RelatorioService) {}
+  constructor(
+    private readonly service: RelatorioService,
+    private readonly credenciais: CredenciaisService,
+    private readonly snovAm: SnovAmService,
+  ) {}
 
-  // GET /api/relatorio/campanhas?snovId=X&snovSecret=Y
-  // Retorna lista de campanhas da conta Snov.io
+  // Credenciais Snov.io ficam no servidor: o navegador envia só o nome do cliente.
+  private async resolverSnov(cliente: string): Promise<{ snovId: string; snovSecret: string }> {
+    const nome = cliente?.trim();
+    if (!nome) throw new BadRequestException('Cliente obrigatório');
+
+    // 1. Cópia local (credenciais_clientes), match exato.
+    try {
+      const c = await this.credenciais.findClienteExato(nome);
+      return { snovId: c.clientId, snovSecret: c.clientSecret };
+    } catch (e) {
+      if (!(e instanceof NotFoundException)) throw e;
+    }
+
+    // 2. Fallback: snov-am-api, por nome ou email.
+    const r = await this.snovAm.buscarCredenciais(nome);
+    if (!r) throw new NotFoundException(`Nenhuma credencial Snov.io para o cliente "${nome}"`);
+    return { snovId: r.clientId, snovSecret: r.clientSecret };
+  }
+
+  // GET /api/relatorio/campanhas?cliente=X
+  // Retorna lista de campanhas da conta Snov.io do cliente
   @Get('campanhas')
-  async listarCampanhas(
-    @Query('snovId')     snovId: string,
-    @Query('snovSecret') snovSecret: string,
-  ) {
-    if (!snovId || !snovSecret) throw new BadRequestException('snovId e snovSecret obrigatórios');
+  async listarCampanhas(@Query('cliente') cliente: string) {
+    const { snovId, snovSecret } = await this.resolverSnov(cliente);
     try {
       return await this.service.listarCampanhas(snovId, snovSecret);
     } catch (e) {
@@ -33,10 +55,10 @@ export class RelatorioController {
   // Retorna métricas por campanha sem gerar PPTX — para exibir na tela
   @Post('metricas')
   async getMetricas(@Body() body: any) {
-    const { snovId, snovSecret, atualInicio, atualFim,
+    const { cliente, atualInicio, atualFim,
             anteriorInicio, anteriorFim, geralInicio, geralFim, campanhas } = body;
-    if (!snovId || !snovSecret) throw new BadRequestException('Credenciais obrigatórias');
     if (!campanhas?.length) throw new BadRequestException('Selecione ao menos uma campanha');
+    const { snovId, snovSecret } = await this.resolverSnov(cliente);
     return this.service.getMetricasCampanhas({
       snovId, snovSecret, atualInicio, atualFim,
       anteriorInicio, anteriorFim, geralInicio, geralFim, campanhas,
@@ -62,8 +84,6 @@ export class RelatorioController {
   async gerar(
     @UploadedFile() templateFile: Express.Multer.File,
     @Body('cliente')           cliente: string,
-    @Body('snovId')            snovId: string,
-    @Body('snovSecret')        snovSecret: string,
     @Body('previsto')          previsto: string,
     @Body('atualInicio')       atualInicio: string,
     @Body('atualFim')          atualFim: string,
@@ -77,7 +97,7 @@ export class RelatorioController {
   ) {
     if (!templateFile) throw new BadRequestException('Template .pptx obrigatório');
     if (!cliente)      throw new BadRequestException('Cliente obrigatório');
-    if (!snovId || !snovSecret) throw new BadRequestException('Credenciais Snov.io obrigatórias');
+    const { snovId, snovSecret } = await this.resolverSnov(cliente);
 
     let campanhasSelecionadas: Array<{ id: number; nome: string }> = [];
     if (campanhasSelecionadasStr) {
