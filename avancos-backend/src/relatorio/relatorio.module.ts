@@ -3,6 +3,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { RelatorioController } from './relatorio.controller';
 import { RelatorioService } from './relatorio.service';
 import { ChartsService } from './charts.service';
+import { SnovAmService } from './snov-am.service';
 import { CredenciaisModule } from '../credenciais/credenciais.module';
 
 @Module({
@@ -11,6 +12,6 @@ import { CredenciaisModule } from '../credenciais/credenciais.module';
     CredenciaisModule,
   ],
   controllers: [RelatorioController],
-  providers: [RelatorioService, ChartsService],
+  providers: [RelatorioService, ChartsService, SnovAmService],
 })
 export class RelatorioModule {}
