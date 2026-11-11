@@ -27,7 +27,7 @@ export class CredenciaisService {
 
   /**
    * Match do nome do cliente usado pelo relatório Snov.io: igualdade após
-   * normalizar caixa, acentos e espaços. Sem "contém" nem similaridade:
+   * ignorar caixa, acentos, espaços e pontuação. Sem "contém" nem similaridade:
    * evita usar a conta de outro cliente nas métricas.
    */
   async findClienteExato(cliente: string) {
@@ -39,8 +39,9 @@ export class CredenciaisService {
     const exato = await this.repo.findOne({ where: { cliente, ativo: true } });
     if (exato) return exato;
 
-    // 2. Mesmo nome, diferindo só em caixa, acento ou espaços.
+    // 2. Mesmo nome, diferindo só em caixa, acento, espaços ou pontuação.
     const alvo = normalizarNome(cliente);
+    if (!alvo) throw naoEncontrado();
     const ativas = await this.repo.find({ where: { ativo: true } });
     const casam = ativas.filter(c => normalizarNome(c.cliente) === alvo);
     if (casam.length === 0) throw naoEncontrado();

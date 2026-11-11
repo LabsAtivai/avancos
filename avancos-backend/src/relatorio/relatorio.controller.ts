@@ -34,7 +34,7 @@ export class RelatorioController {
     const orientacao =
       `Nenhuma credencial Snov.io encontrada para o cliente "${nome}". ` +
       'O nome precisa ser igual ao cadastrado na tela Credenciais ' +
-      '(ou à descrição/e-mail da conta no snov-am); só caixa, acentos e espaços são ignorados.';
+      '(ou à descrição/e-mail da conta no snov-am); só caixa, acentos, espaços e pontuação são ignorados.';
 
     if (!this.snovAm.configurado()) {
       throw new NotFoundException(

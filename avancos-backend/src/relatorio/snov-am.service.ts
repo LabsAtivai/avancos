@@ -14,8 +14,8 @@ interface ContaSnovAm {
 /**
  * Fallback de credenciais no snov-am-api (fonte oficial das contas Snov).
  * Usado quando o cliente não existe na tabela local credenciais_clientes.
- * Casa por nome (description) ou email, por igualdade após normalizar
- * caixa, acentos e espaços.
+ * Casa por nome (description) ou email, por igualdade após ignorar
+ * caixa, acentos, espaços e pontuação.
  */
 @Injectable()
 export class SnovAmService {
@@ -42,6 +42,7 @@ export class SnovAmService {
     const http = this.http();
     try {
       const alvo = normalizarNome(cliente);
+      if (!alvo) return null;
       const contas = await this.listarAtivas(http);
 
       const casam = contas.filter(c =>
