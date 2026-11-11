@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Credencial } from './credencial.entity';
 import { CreateCredencialDto, UpdateCredencialDto } from './credencial.dto';
+import { normalizarNome } from '../common/normalizar-nome';
 
 @Injectable()
 export class CredenciaisService {
@@ -25,15 +26,33 @@ export class CredenciaisService {
   }
 
   /**
-   * Match exato do nome do cliente, usado pelo relatório Snov.io.
-   * Sem match aproximado: evita usar a conta de outro cliente nas métricas.
+   * Match do nome do cliente usado pelo relatório Snov.io: igualdade após
+   * normalizar caixa, acentos e espaços. Sem "contém" nem similaridade:
+   * evita usar a conta de outro cliente nas métricas.
    */
   async findClienteExato(cliente: string) {
-    const c = cliente
-      ? await this.repo.findOne({ where: { cliente, ativo: true } })
-      : null;
-    if (!c) throw new NotFoundException(`Nenhuma credencial Snov.io ativa para o cliente "${cliente}"`);
-    return c;
+    const naoEncontrado = () =>
+      new NotFoundException(`Nenhuma credencial Snov.io ativa para o cliente "${cliente}"`);
+    if (!cliente) throw naoEncontrado();
+
+    // 1. Nome idêntico ao cadastrado.
+    const exato = await this.repo.findOne({ where: { cliente, ativo: true } });
+    if (exato) return exato;
+
+    // 2. Mesmo nome, diferindo só em caixa, acento ou espaços.
+    const alvo = normalizarNome(cliente);
+    const ativas = await this.repo.find({ where: { ativo: true } });
+    const casam = ativas.filter(c => normalizarNome(c.cliente) === alvo);
+    if (casam.length === 0) throw naoEncontrado();
+
+    const contas = new Set(casam.map(c => c.clientId));
+    if (contas.size > 1) {
+      throw new ConflictException(
+        `Mais de uma credencial Snov.io ativa corresponde ao cliente "${cliente}". ` +
+        'Deixe apenas uma ativa na tela Credenciais.',
+      );
+    }
+    return casam[0];
   }
 
   async findByCliente(cliente: string) {

@@ -1,14 +1,12 @@
 import {
-  Controller, Get, Post, Put, Delete, UseGuards,
+  Controller, Get, Post, Put, Delete,
   Param, Body, Query, ParseIntPipe,
 } from '@nestjs/common';
 import { CredenciaisService } from './credenciais.service';
-import { CredenciaisChaveGuard } from './credenciais-chave.guard';
 import { CreateCredencialDto, UpdateCredencialDto } from './credencial.dto';
 
-// Acesso protegido por CredenciaisChaveGuard (exceto a lista sem segredos).
+// Sem autenticação por enquanto: acesso controlado virá com a tela de login.
 @Controller('credenciais')
-@UseGuards(CredenciaisChaveGuard)
 export class CredenciaisController {
   constructor(private readonly service: CredenciaisService) {}
 

@@ -18,8 +18,8 @@ services:
       PAINEL_RATE_LIMIT_POR_MIN: ${PAINEL_RATE_LIMIT_POR_MIN:-120}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       # Fallback de credenciais Snov (snov-am-api na rede ativaai)
-      CREDENTIALS_API_URL: ${CREDENTIALS_API_URL}
-      CREDENTIALS_API_KEY: ${CREDENTIALS_API_KEY}
+      CREDENTIALS_API_URL: ${CREDENTIALS_API_URL:-}
+      CREDENTIALS_API_KEY: ${CREDENTIALS_API_KEY:-}
     networks:
       - ativaai
 networks:

@@ -31,8 +31,19 @@ export class RelatorioController {
     }
 
     // 2. Fallback: snov-am-api, por nome ou email.
+    const orientacao =
+      `Nenhuma credencial Snov.io encontrada para o cliente "${nome}". ` +
+      'O nome precisa ser igual ao cadastrado na tela Credenciais ' +
+      '(ou à descrição/e-mail da conta no snov-am); só caixa, acentos e espaços são ignorados.';
+
+    if (!this.snovAm.configurado()) {
+      throw new NotFoundException(
+        `${orientacao} A busca no snov-am está desativada neste servidor ` +
+        '(CREDENTIALS_API_URL / CREDENTIALS_API_KEY não configuradas).',
+      );
+    }
     const r = await this.snovAm.buscarCredenciais(nome);
-    if (!r) throw new NotFoundException(`Nenhuma credencial Snov.io para o cliente "${nome}"`);
+    if (!r) throw new NotFoundException(orientacao);
     return { snovId: r.clientId, snovSecret: r.clientSecret };
   }
 
