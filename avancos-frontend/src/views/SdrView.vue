@@ -284,7 +284,7 @@ import api, { avancosApi } from '@/services/api'
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 
-const sdrs     = ref(['Leandro', 'Pedro', 'Ana Carolina', 'Henrique', 'Latifi', 'Nicolly', 'Victória'])
+const sdrs     = ref(['Leandro', 'Pedro', 'Ana Carolina', 'Henrique', 'Latifi', 'Nicolas', 'Nicolly', 'Victória'])
 const tipos    = ['Interessado', 'Apresentação', 'Encaminhamento', 'Nutrição']
 const LIMITE   = 100
 
@@ -321,8 +321,10 @@ const totalPaginas = computed(() => Math.max(1, Math.ceil(total.value / LIMITE))
 // Filtra valores de "responsavel" que nao parecem nome de pessoa —
 // dados sujos de import de CSV (ex: "5mil", "10mil", "s") acabam indo
 // parar nesse campo e nao devem aparecer como opcao de SDR
+const NAO_USUARIOS = ['e-mail', 'email cliente']
 function pareceNome(s) {
-  return /^[a-zà-ÿ\s'.-]{2,}$/i.test((s || '').trim())
+  const v = (s || '').trim()
+  return /^[a-zà-ÿ\s'.-]{2,}$/i.test(v) && !NAO_USUARIOS.includes(v.toLowerCase())
 }
 
 onMounted(() => {
